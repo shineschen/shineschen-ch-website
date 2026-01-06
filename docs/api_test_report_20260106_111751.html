@@ -1,0 +1,2735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API自动化测试报告</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .report-type {
+            background-color: #e6f7ff;
+            padding: 12px 20px;
+            border-left: 4px solid #1890ff;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .summary {
+            background-color: #f8f9fa;
+            padding: 25px 30px;
+            border-bottom: 1px solid #e9ecef;
+            flex-shrink: 0;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-number {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .passed-number {
+            color: #52c41a;
+        }
+
+        .failed-number {
+            color: #f5222d;
+        }
+
+        .skipped-number {
+            color: #1890ff;
+        }
+
+        .rate-number {
+            color: #1890ff;
+        }
+
+        .details {
+            flex: 1;
+            overflow: hidden;
+            padding: 0 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 {
+            color: #333;
+            margin: 20px 0 15px 0;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+            flex-shrink: 0;
+        }
+
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #f1f3f4;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #5f6368;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .case-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .case-name {
+            font-weight: 500;
+            color: #202124;
+        }
+
+        .case-description {
+            font-size: 13px;
+            color: #5f6368;
+            margin-top: 4px;
+        }
+
+        .toggle-button {
+            background: #f1f3f4;
+            border: none;
+            color: #5f6368;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
+        .toggle-button:hover {
+            background: #e8eaed;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-passed {
+            background-color: #e6ffed;
+            color: #34a853;
+        }
+
+        .status-failed {
+            background-color: #fce8e6;
+            color: #ea4335;
+        }
+
+        .status-skipped {
+            background-color: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .duration {
+            color: #5f6368;
+            font-size: 13px;
+        }
+
+        .steps-container {
+            display: none;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .step {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            background: white;
+        }
+
+        .step:last-child {
+            border-bottom: none;
+        }
+
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .step-info {
+            font-weight: 500;
+        }
+
+        .step-passed {
+            border-left: 3px solid #52c41a;
+        }
+
+        .step-failed {
+            border-left: 3px solid #f5222d;
+        }
+
+        .step-skipped {
+            border-left: 3px solid #1890ff;
+        }
+
+        .error {
+            color: #f5222d;
+            font-size: 13px;
+            margin-top: 8px;
+            padding: 10px;
+            background-color: #fff2f0;
+            border-radius: 4px;
+        }
+
+        .api-section {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+
+        .api-section-title {
+            font-weight: 600;
+            color: #1890ff;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .request-info, .response-info, .assertion-info {
+            background-color: white;
+            border: 1px solid #e9e9e9;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 12px 0;
+        }
+
+        .info-title {
+            margin: 0 0 10px 0;
+            color: #202124;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        pre {
+            background-color: #f5f5f5;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            line-height: 1.4;
+            margin: 0;
+            white-space: pre-wrap;
+            max-height: 300px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px;
+            color: #5f6368;
+            font-size: 13px;
+            border-top: 1px solid #e9ecef;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>API自动化测试报告</h1>
+    </header>
+    <div class="report-type">
+        <strong>报告类型:</strong> API测试报告
+        <p></p>
+        <strong>报告时间：</strong> 2026-01-06 11:17:49
+    </div>
+
+    <div class="summary">
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="summary-number">8</div>
+                <div class="summary-label">总用例数</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number passed-number">0</div>
+                <div class="summary-label">通过用例</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number failed-number">6</div>
+                <div class="summary-label">失败用例</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number skipped-number">2</div>
+                <div class="summary-label">跳过用例</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number rate-number">0.0%</div>
+                <div class="summary-label">通过率</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="details">
+        <h2>详细结果</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                <tr>
+                    <th>测试用例</th>
+                    <th>状态</th>
+                    <th>耗时</th>
+                </tr>
+                </thead>
+                <tbody>
+                
+                <tr id="case-1">
+                    <td>
+                        <div class="case-header" data-case-index="1">
+                            <div>
+                                <div class="case-name">平台管理员用户登录</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="1">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-failed">❌ 失败</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.06秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-1" class="steps-container">
+                    <td colspan="3">
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 1:</strong> request - 
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> POST</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/admin/login/login</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "phone": "15191926676",
+  "password": "12345678"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 60.30ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-2">
+                    <td>
+                        <div class="case-header" data-case-index="2">
+                            <div>
+                                <div class="case-name">用户登录失败测试</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="2">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-skipped">⏭️ 跳过</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.00秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-2" class="steps-container">
+                    <td colspan="3">
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-3">
+                    <td>
+                        <div class="case-header" data-case-index="3">
+                            <div>
+                                <div class="case-name">获取用户信息接口测试</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="3">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-failed">❌ 失败</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.01秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-3" class="steps-container">
+                    <td colspan="3">
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 1:</strong> request - 使用登录token获取用户信息
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> GET</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/admin/admin/getInfo</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Manage-Token": "$admin_token",
+  "platform-type": "1",
+  "app-platform": "1",
+  "app-os": "1",
+  "app-version": "2.30.412",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 10.20ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-4">
+                    <td>
+                        <div class="case-header" data-case-index="4">
+                            <div>
+                                <div class="case-name">省代账号创建流程</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="4">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-failed">❌ 失败</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.50秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-4" class="steps-container">
+                    <td colspan="3">
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 1:</strong> method:load_config_data - 加载行政区数据
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+
+                            <!-- API响应信息 -->
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 2:</strong> method:generate_unique_phone_api - 生成唯一手机号
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+
+                            <!-- API响应信息 -->
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 3:</strong> method:generate_all_types_fake_data - 生成faker测试数据
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+
+                            <!-- API响应信息 -->
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 4:</strong> method:double_md5 - 生成加密令牌和时间戳
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+
+                            <!-- API响应信息 -->
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 5:</strong> request - 获取平台设置的分润比例信息
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> GET</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_merchant/agent_manage/agent_public/selectData</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Manage-Token": "$admin_token",
+  "platform-type": "1",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 18.82ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 6:</strong> request - 创建省代获取手机验证码
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> POST</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_merchant/agent_manage/province_agent/phoneCode</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Manage-Token": "$admin_token",
+  "platform-type": "1",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "admin_id": null,
+  "phone": "19903337227",
+  "timestamp": "1767669469143",
+  "sign": "e64e1be0c204fb954a9aebf6889aee7b",
+  "description": "使用加密令牌和时间戳发送请求"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 17.46ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 7:</strong> request - 添加省代理
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> POST</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_merchant/agent_manage/province_agent/add</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Manage-Token": "$admin_token",
+  "platform-type": "1",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "agent_mode": 1,
+  "agent_province_code": "810000",
+  "province_code": "810000",
+  "city_code": "810200",
+  "county_code": "810201",
+  "district": "",
+  "city": "",
+  "code": "123456",
+  "contact": "任桂芳",
+  "contact_info": "19903337227",
+  "credit_period": "$profit_infos_province_credit_period",
+  "detail_address": "山东省帅市蓟州穆路H座 246536",
+  "entry_fee": 20000,
+  "identity_type": 1,
+  "margin_deposit": 20000,
+  "name": "维涛网络有限公司(省代)",
+  "settlement_bank": "自动化测试银行（省代）",
+  "opening_bank": "自动化测试银行支行（省代）",
+  "bank_account": "88888888888",
+  "password": "",
+  "phone": "19903337227",
+  "phone_sale_type": "$profit_infos_province_phone_sale_type",
+  "phone_sale_value": "$profit_infos_province_phone_sale_value",
+  "province_phone_sale_type": 1,
+  "province_phone_sale_value": 0,
+  "province_software_first_type": 1,
+  "province_software_first_value": 0,
+  "province_software_renew_type": 1,
+  "province_software_renew_value": 0,
+  "qualification": [
+    "https://ddapu.oss-cn-chengdu.aliyuncs.com/daydayup_test/image/202512/20251204/6a451be2b0e3c8d35cdf955afca493fc.jpg"
+  ],
+  "region": [
+    "810000",
+    "810200",
+    "810201"
+  ],
+  "software_first_type": "$profit_infos_province_software_first_type",
+  "software_first_value": "$profit_infos_province_software_first_value",
+  "software_renew_type": "$profit_infos_province_software_renew_type",
+  "software_renew_value": "$profit_infos_province_software_renew_value"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 18.91ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 8:</strong> request - 获取新创建的省代ID
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> GET</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_merchant/agent_manage/province_agent/notAuditPassList</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "manage-token": "$admin_token",
+  "platform-type": "1",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "size": 20,
+  "page": 1,
+  "contact_info": "19903337227"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 17.90ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 9:</strong> request - 平台审核省代理
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> PUT</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_merchant/agent_manage/province_agent/setAuditStatus</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Content-Type": "application/json",
+  "manage-token": "$admin_token",
+  "platform-type": "1",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "admin_id": "$province_id",
+  "audit_status": 1,
+  "audit_reason": "",
+  "province_code": "810000",
+  "city_code": "810200",
+  "county_code": "810201",
+  "detail_address": "山东省帅市蓟州穆路H座 246536",
+  "identity_type": 1,
+  "qualification": [
+    "111"
+  ],
+  "contact": "任桂芳",
+  "contact_info": "19903337227",
+  "phone_sale_type": "$profit_infos_province_phone_sale_type",
+  "phone_sale_value": "$profit_infos_province_phone_sale_value",
+  "software_first_type": "$profit_infos_province_software_first_type",
+  "software_first_value": "$profit_infos_province_software_first_value",
+  "software_renew_type": "$profit_infos_province_software_renew_type",
+  "software_renew_value": "$profit_infos_province_software_renew_value",
+  "credit_period": "$profit_infos_province_credit_period",
+  "settlement_bank": "自动化测试银行（省代）",
+  "opening_bank": "自动化测试银行支行（省代）",
+  "bank_account": "88888888888"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 18.37ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 10:</strong> request - 新创建的省代登录代理商后台
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> POST</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/admin/login/login</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "phone": "19903337227",
+  "password": "12345678"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 17.20ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-5">
+                    <td>
+                        <div class="case-header" data-case-index="5">
+                            <div>
+                                <div class="case-name">区代账号创建流程</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="5">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-failed">❌ 失败</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.15秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-5" class="steps-container">
+                    <td colspan="3">
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 1:</strong> method:generate_api_fake_data - 生成新用户名
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+
+                            <!-- API响应信息 -->
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 2:</strong> method:generate_unique_phone_api - 生成唯一手机号
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+
+                            <!-- API响应信息 -->
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 3:</strong> method:double_md5 - 生成加密令牌和时间戳
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+
+                            <!-- API响应信息 -->
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 4:</strong> request - 获取验证码
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> POST</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_province/district_manage/phoneCode</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Manage-Token": "$province_token",
+  "platform-type": "11",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "admin_id": null,
+  "phone": "19908198669",
+  "timestamp": "1767669469315",
+  "sign": "7f5e92e088fe251d421580dbb59858b7"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 18.24ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 5:</strong> request - 添加区代理
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> POST</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_province/district_manage/add</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Manage-Token": "$province_token",
+  "platform-type": "11",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "name": "兰金电子科技有限公司(区代)",
+  "province": "",
+  "city": "",
+  "district": "",
+  "detail_address": "山东省帅市蓟州穆路H座 246536",
+  "identity_type": 2,
+  "qualificationUrl": "",
+  "qualification": [
+    "https://ddapu.oss-cn-chengdu.aliyuncs.com/daydayup_test/image/202512/20251210/03bdc60e56bcb1f470f880c51fcbd0c1.png"
+  ],
+  "contact": "王涛",
+  "contact_info": "19908198669",
+  "phone": "19908198669",
+  "code": "123456",
+  "password": "",
+  "agent_mode": 2,
+  "agent_province_code": "810000",
+  "entry_fee": 5000,
+  "margin_deposit": 5000,
+  "province_phone_sale_type": "$profit_infos_district_phone_sale_type",
+  "province_phone_sale_value": "$profit_infos_district_phone_sale_value",
+  "province_software_first_type": 1,
+  "province_software_first_value": 0,
+  "province_software_renew_type": 1,
+  "province_software_renew_value": 0,
+  "credit_period": "$profit_infos_district_credit_period",
+  "settlement_bank": "自动化测试银行（省代）",
+  "opening_bank": "自动化测试银行支行（省代）",
+  "bank_account": "88888888888",
+  "region": [
+    "810000",
+    "810200",
+    "810201"
+  ],
+  "agent_area": [
+    "810000",
+    "810200",
+    "810201"
+  ],
+  "phone_sale_type": "$profit_infos_district_phone_sale_type",
+  "phone_sale_value": "$profit_infos_district_phone_sale_value",
+  "software_first_type": "$profit_infos_district_software_first_type",
+  "software_first_value": "$profit_infos_district_software_first_value",
+  "software_renew_type": "$profit_infos_district_software_renew_type",
+  "software_renew_value": "$profit_infos_district_software_renew_value",
+  "province_code": "810000",
+  "city_code": "810200",
+  "county_code": "810201",
+  "agent_city_code": "810200",
+  "agent_county_code": "810201"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 18.10ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 6:</strong> request - 获取新创建的区代ID
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> GET</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_province/district_manage/notAuditPassList</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "manage-token": "$province_token",
+  "platform-type": "11",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                <p><strong>查询参数:</strong></p>
+                                <pre>{
+  "size": 20,
+  "page": 1,
+  "contact_info": "19908198669"
+}</pre>
+                                
+                                
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 17.82ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 7:</strong> request - 平台审核区代理
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> PUT</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_merchant/agent_manage/district_agent/setAuditStatus</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Content-Type": "application/json",
+  "manage-token": "$admin_token",
+  "platform-type": "1",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "admin_id": "$district_id",
+  "audit_status": 1,
+  "audit_reason": "",
+  "province_code": "810000",
+  "city_code": "810200",
+  "county_code": "810201",
+  "detail_address": "山东省帅市蓟州穆路H座 246536",
+  "identity_type": 2,
+  "qualification": [
+    "111"
+  ],
+  "contact": "王涛",
+  "contact_info": "19908198669",
+  "phone_sale_type": "$profit_infos_district_phone_sale_type",
+  "phone_sale_value": "$profit_infos_district_phone_sale_value",
+  "software_first_type": "$profit_infos_district_software_first_type",
+  "software_first_value": "$profit_infos_district_software_first_value",
+  "software_renew_type": "$profit_infos_district_software_renew_type",
+  "software_renew_value": "$profit_infos_district_software_renew_value",
+  "credit_period": "$profit_infos_district_credit_period",
+  "settlement_bank": "自动化测试银行（省代）",
+  "opening_bank": "自动化测试银行支行（省代）",
+  "bank_account": "88888888888"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 16.90ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 8:</strong> request - 新创建的区代登录代理商后台
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> POST</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/admin/login/login</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "phone": "19908198669",
+  "password": "12345678"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 17.49ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-6">
+                    <td>
+                        <div class="case-header" data-case-index="6">
+                            <div>
+                                <div class="case-name">采购订单流程</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="6">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-failed">❌ 失败</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.05秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-6" class="steps-container">
+                    <td colspan="3">
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 1:</strong> request - 区代创建订单
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> POST</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_district/order/createOrder</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "manage-token": "$district_token",
+  "platform-type": "13",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "order_no": "",
+  "product_list": [
+    {
+      "product_id": 3,
+      "name": "OPPO K13 Turbo 疾风散热引擎 潮汐引擎 5G大容量电池手机",
+      "image_url": [
+        "https://img12.360buyimg.com/n5/s720x720_jfs/t1/321472/15/24746/24589/689aabe3F1c3723e8/6f0d4fef3916301e.jpg.avif",
+        "https://img12.360buyimg.com/n5/s720x720_jfs/t1/321472/15/24746/24589/689aabe3F1c3723e8/6f0d4fef3916301e.jpg.avif",
+        "https://img12.360buyimg.com/n5/s720x720_jfs/t1/319625/14/24238/64388/689aab4bF1d4b2230/3ead943a11c275a7.png.avif"
+      ],
+      "product_category_id": 1,
+      "type": 1,
+      "market_price": "1299.00",
+      "sale_price": "1166.66",
+      "cost_price": "1156.66",
+      "count": 1,
+      "days": 0,
+      "spec_desc": "外观：骑士白；版本8GB+128GB",
+      "buy_count": 0,
+      "product_category_name": "手机",
+      "stock_count": 1,
+      "purchase_price": "0"
+    },
+    {
+      "product_id": 2,
+      "name": "OPPO Reno14 学生机",
+      "image_url": [
+        "https://img14.360buyimg.com/n5/s720x720_jfs/t1/306486/29/1821/73795/682435f3Fe79859f4/30bbbc1221c986af.jpg.avif",
+        "https://img14.360buyimg.com/n5/s720x720_jfs/t1/316345/40/25905/22617/689c06d9F4044548d/54d4b16a4d1e5190.jpg.avif",
+        "https://img14.360buyimg.com/n5/s720x720_jfs/t1/316345/40/25905/22617/689c06d9F4044548d/54d4b16a4d1e5190.jpg.avif"
+      ],
+      "product_category_id": 1,
+      "type": 1,
+      "market_price": "2066.88",
+      "sale_price": "1988.88",
+      "cost_price": "1978.88",
+      "count": 1,
+      "days": 0,
+      "spec_desc": "内存：8G；存储：512；颜色：黑色",
+      "buy_count": 0,
+      "product_category_name": "手机",
+      "stock_count": 2,
+      "purchase_price": "0"
+    },
+    {
+      "product_id": 4,
+      "name": "学生端 服务权益包",
+      "image_url": [
+        "https://img12.360buyimg.com/n5/s720x720_jfs/t1/321472/15/24746/24589/689aabe3F1c3723e8/6f0d4fef3916301e.jpg.avif"
+      ],
+      "product_category_id": 5,
+      "type": 2,
+      "market_price": "1988.88",
+      "sale_price": "1666.68",
+      "cost_price": "1583.35",
+      "count": 1,
+      "days": 365,
+      "spec_desc": "365天",
+      "buy_count": 0,
+      "product_category_name": "服务",
+      "stock_count": 3,
+      "purchase_price": "0"
+    }
+  ]
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 17.14ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 2:</strong> request - 获取订单信息
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> GET</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_public/order_public/orderList</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "manage-token": "$district_token",
+  "platform-type": "13",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                <p><strong>查询参数:</strong></p>
+                                <pre>{
+  "page": 1,
+  "size": 20,
+  "district_agent_admin_id": "$district_agent_admin_id"
+}</pre>
+                                
+                                
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 15.62ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 3:</strong> request - 订单提交打款凭证
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> PUT</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_district/order/savePayReceipt</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "manage-token": "$district_token",
+  "platform-type": "13",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "order_no": "$order_no",
+  "pay_date": "2025-12-19",
+  "serial_number": "",
+  "pay_receipt_image_url": [
+    "https://ddapu.oss-cn-chengdu.aliyuncs.com/daydayup_test/image/202512/20251219/c8d2323a6c0103296234748f5f69814b.png"
+  ],
+  "purchase_contract_image_url": [
+    "https://ddapu.oss-cn-chengdu.aliyuncs.com/daydayup_test/image/202512/20251219/7431ea4f6e29781719d0a542cb326236.png"
+  ]
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 15.75ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-7">
+                    <td>
+                        <div class="case-header" data-case-index="7">
+                            <div>
+                                <div class="case-name">订单审核流程</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="7">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-failed">❌ 失败</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.06秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-7" class="steps-container">
+                    <td colspan="3">
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 1:</strong> request - 省代审核订单通过
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> PUT</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_province/order/setAuditStatus</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "manage-token": "$province_token",
+  "platform-type": "11",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "order_no": "$order_no",
+  "audit_status": 1,
+  "audit_reason": ""
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 15.65ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 2:</strong> request - 平台审核订单通过
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> PUT</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_merchant/sale_order/order/setStartAuditStatus</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "manage-token": "$admin_token",
+  "platform-type": "1",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "order_no": "$order_no",
+  "audit_status": 1,
+  "audit_reason": "",
+  "get_receipt_image_url": [
+    "https://ddapu.oss-cn-chengdu.aliyuncs.com/daydayup_test/image/202512/20251219/60e49ec6d012cb8c5d49d48d29782cc3.png"
+  ]
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 15.05ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 3:</strong> request - 平台复核订单通过
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> PUT</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_merchant/sale_order/order/setRepeatAuditStatus</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "manage-token": "$admin_token",
+  "platform-type": "1",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "order_no": "$order_no",
+  "audit_status": 1,
+  "audit_reason": "",
+  "get_receipt_image_url": null
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 15.61ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 4:</strong> request - 获取订单详情信息
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> GET</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_merchant/sale_order/order/orderDetail</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "manage-token": "$admin_token",
+  "platform-type": "1",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                <p><strong>查询参数:</strong></p>
+                                <pre>{
+  "order_no": "$order_no"
+}</pre>
+                                
+                                
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 502</p>
+                                <p><strong>响应时间:</strong> 15.28ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 06 Jan 2026 03:17:47 GMT",
+  "Content-Type": "text/html",
+  "Content-Length": "157",
+  "Connection": "keep-alive"
+}</pre>
+                                
+                                
+                                <p><strong>响应体:</strong></p>
+                                <pre>&amp;lt;html&amp;gt;
+
+&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;502 Bad Gateway&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+
+&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;502 Bad Gateway&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+
+&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.20.1&amp;lt;/center&amp;gt;
+
+&amp;lt;/body&amp;gt;
+
+&amp;lt;/html&amp;gt;
+
+</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 -->
+                            
+
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-8">
+                    <td>
+                        <div class="case-header" data-case-index="8">
+                            <div>
+                                <div class="case-name">未知用例</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="8">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-skipped">⏭️ 跳过</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.00秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-8" class="steps-container">
+                    <td colspan="3">
+                        
+                        
+                    </td>
+                </tr>
+                
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer">
+        生成时间: 2026-01-06 11:17:49
+    </div>
+</div>
+
+<script>
+    // 页面加载完成后绑定事件
+    document.addEventListener('DOMContentLoaded', function () {
+        // 为所有按钮添加独立的点击事件
+        const toggleButtons = document.querySelectorAll('.toggle-button');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.stopPropagation(); // 阻止事件冒泡
+                const index = this.getAttribute('data-btn-index');
+                toggleSteps(index);
+            });
+        });
+
+        // 为所有用例标题添加点击事件（不包括按钮本身）
+        const caseHeaders = document.querySelectorAll('.case-header');
+        caseHeaders.forEach(header => {
+            header.addEventListener('click', function (e) {
+                // 如果点击的不是按钮，则展开/收起步骤
+                if (!e.target.classList.contains('toggle-button') && e.target.tagName !== 'BUTTON') {
+                    const index = this.getAttribute('data-case-index');
+                    toggleSteps(index);
+                }
+            });
+        });
+
+        // 默认展开失败的用例
+        
+        
+        toggleSteps(1);
+        
+        
+        
+        
+        
+        toggleSteps(3);
+        
+        
+        
+        toggleSteps(4);
+        
+        
+        
+        toggleSteps(5);
+        
+        
+        
+        toggleSteps(6);
+        
+        
+        
+        toggleSteps(7);
+        
+        
+        
+        
+    });
+
+    function toggleSteps(caseIndex) {
+        try {
+            const stepsRow = document.getElementById('steps-' + caseIndex);
+            const toggleButton = document.querySelector('[data-btn-index="' + caseIndex + '"]');
+
+            if (!stepsRow || !toggleButton) {
+                console.error('无法找到元素:', caseIndex);
+                return;
+            }
+
+            if (stepsRow.style.display === 'table-row') {
+                stepsRow.style.display = 'none';
+                toggleButton.textContent = '展开步骤';
+            } else {
+                stepsRow.style.display = 'table-row';
+                toggleButton.textContent = '收起步骤';
+            }
+        } catch (error) {
+            console.error('切换步骤时出错:', error);
+        }
+    }
+</script>
+</body>
+</html>
