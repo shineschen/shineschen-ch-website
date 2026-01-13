@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API自动化测试报告</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .report-type {
+            background-color: #e6f7ff;
+            padding: 12px 20px;
+            border-left: 4px solid #1890ff;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .summary {
+            background-color: #f8f9fa;
+            padding: 25px 30px;
+            border-bottom: 1px solid #e9ecef;
+            flex-shrink: 0;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-number {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .passed-number {
+            color: #52c41a;
+        }
+
+        .failed-number {
+            color: #f5222d;
+        }
+
+        .skipped-number {
+            color: #1890ff;
+        }
+
+        .rate-number {
+            color: #1890ff;
+        }
+
+        .details {
+            flex: 1;
+            overflow: hidden;
+            padding: 0 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 {
+            color: #333;
+            margin: 20px 0 15px 0;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+            flex-shrink: 0;
+        }
+
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #f1f3f4;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #5f6368;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .case-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .case-name {
+            font-weight: 500;
+            color: #202124;
+        }
+
+        .case-description {
+            font-size: 13px;
+            color: #5f6368;
+            margin-top: 4px;
+        }
+
+        .toggle-button {
+            background: #f1f3f4;
+            border: none;
+            color: #5f6368;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
+        .toggle-button:hover {
+            background: #e8eaed;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-passed {
+            background-color: #e6ffed;
+            color: #34a853;
+        }
+
+        .status-failed {
+            background-color: #fce8e6;
+            color: #ea4335;
+        }
+
+        .status-skipped {
+            background-color: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .duration {
+            color: #5f6368;
+            font-size: 13px;
+        }
+
+        .steps-container {
+            display: none;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .step {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            background: white;
+        }
+
+        .step:last-child {
+            border-bottom: none;
+        }
+
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .step-info {
+            font-weight: 500;
+        }
+
+        .step-passed {
+            border-left: 3px solid #52c41a;
+        }
+
+        .step-failed {
+            border-left: 3px solid #f5222d;
+        }
+
+        .step-skipped {
+            border-left: 3px solid #1890ff;
+        }
+
+        .error {
+            color: #f5222d;
+            font-size: 13px;
+            margin-top: 8px;
+            padding: 10px;
+            background-color: #fff2f0;
+            border-radius: 4px;
+        }
+
+        .api-section {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+
+        .api-section-title {
+            font-weight: 600;
+            color: #1890ff;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .request-info, .response-info, .assertion-info {
+            background-color: white;
+            border: 1px solid #e9e9e9;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 12px 0;
+        }
+
+        .info-title {
+            margin: 0 0 10px 0;
+            color: #202124;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        pre {
+            background-color: #f5f5f5;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            line-height: 1.4;
+            margin: 0;
+            white-space: pre-wrap;
+            max-height: 300px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px;
+            color: #5f6368;
+            font-size: 13px;
+            border-top: 1px solid #e9ecef;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>API自动化测试报告</h1>
+    </header>
+    <div class="report-type">
+        <strong>报告类型:</strong> API测试报告
+        <p></p>
+        <strong>报告时间：</strong> 2026-01-13 15:42:17
+    </div>
+
+    <div class="summary">
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="summary-number">8</div>
+                <div class="summary-label">总用例数</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number passed-number">0</div>
+                <div class="summary-label">通过用例</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number failed-number">0</div>
+                <div class="summary-label">失败用例</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number skipped-number">8</div>
+                <div class="summary-label">跳过用例</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number rate-number">0.0%</div>
+                <div class="summary-label">通过率</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="details">
+        <h2>详细结果</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                <tr>
+                    <th>测试用例</th>
+                    <th>状态</th>
+                    <th>耗时</th>
+                </tr>
+                </thead>
+                <tbody>
+                
+                <tr id="case-1">
+                    <td>
+                        <div class="case-header" data-case-index="1">
+                            <div>
+                                <div class="case-name">未知用例</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="1">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-skipped">⏭️ 跳过</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.00秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-1" class="steps-container">
+                    <td colspan="3">
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-2">
+                    <td>
+                        <div class="case-header" data-case-index="2">
+                            <div>
+                                <div class="case-name">未知用例</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="2">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-skipped">⏭️ 跳过</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.00秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-2" class="steps-container">
+                    <td colspan="3">
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-3">
+                    <td>
+                        <div class="case-header" data-case-index="3">
+                            <div>
+                                <div class="case-name">未知用例</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="3">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-skipped">⏭️ 跳过</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.00秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-3" class="steps-container">
+                    <td colspan="3">
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-4">
+                    <td>
+                        <div class="case-header" data-case-index="4">
+                            <div>
+                                <div class="case-name">未知用例</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="4">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-skipped">⏭️ 跳过</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.00秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-4" class="steps-container">
+                    <td colspan="3">
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-5">
+                    <td>
+                        <div class="case-header" data-case-index="5">
+                            <div>
+                                <div class="case-name">未知用例</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="5">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-skipped">⏭️ 跳过</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.00秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-5" class="steps-container">
+                    <td colspan="3">
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-6">
+                    <td>
+                        <div class="case-header" data-case-index="6">
+                            <div>
+                                <div class="case-name">未知用例</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="6">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-skipped">⏭️ 跳过</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.00秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-6" class="steps-container">
+                    <td colspan="3">
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-7">
+                    <td>
+                        <div class="case-header" data-case-index="7">
+                            <div>
+                                <div class="case-name">未知用例</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="7">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-skipped">⏭️ 跳过</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.00秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-7" class="steps-container">
+                    <td colspan="3">
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-8">
+                    <td>
+                        <div class="case-header" data-case-index="8">
+                            <div>
+                                <div class="case-name">未知用例</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="8">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-skipped">⏭️ 跳过</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.00秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-8" class="steps-container">
+                    <td colspan="3">
+                        
+                        
+                    </td>
+                </tr>
+                
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer">
+        生成时间: 2026-01-13 15:42:17
+    </div>
+</div>
+
+<script>    // 页面加载完成后绑定事件
+    document.addEventListener('DOMContentLoaded', function () {
+        // 为所有按钮添加独立的点击事件
+        const toggleButtons = document.querySelectorAll('.toggle-button');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.stopPropagation(); // 阻止事件冒泡
+                const index = this.getAttribute('data-btn-index');
+                toggleSteps(index);
+            });
+        });
+
+        // 为所有用例标题添加点击事件（不包括按钮本身）
+        const caseHeaders = document.querySelectorAll('.case-header');
+        caseHeaders.forEach(header => {
+            header.addEventListener('click', function (e) {
+                // 如果点击的不是按钮，则展开/收起步骤
+                if (!e.target.classList.contains('toggle-button') && e.target.tagName !== 'BUTTON') {
+                    const index = this.getAttribute('data-case-index');
+                    toggleSteps(index);
+                }
+            });
+        });
+
+        // 默认展开失败的用例
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    });
+
+    function toggleSteps(caseIndex) {
+        try {
+            const stepsRow = document.getElementById('steps-' + caseIndex);
+            const toggleButton = document.querySelector('[data-btn-index="' + caseIndex + '"]');
+
+            if (!stepsRow || !toggleButton) {
+                console.error('无法找到元素:', caseIndex);
+                return;
+            }
+
+            if (stepsRow.style.display === 'table-row') {
+                stepsRow.style.display = 'none';
+                toggleButton.textContent = '展开步骤';
+            } else {
+                stepsRow.style.display = 'table-row';
+                toggleButton.textContent = '收起步骤';
+            }
+        } catch (error) {
+            console.error('切换步骤时出错:', error);
+        }
+    }
+</script>
+</body>
+</html>
