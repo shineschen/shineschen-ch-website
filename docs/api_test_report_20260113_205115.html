@@ -1,0 +1,2288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API自动化测试报告</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .report-type {
+            background-color: #e6f7ff;
+            padding: 12px 20px;
+            border-left: 4px solid #1890ff;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .summary {
+            background-color: #f8f9fa;
+            padding: 25px 30px;
+            border-bottom: 1px solid #e9ecef;
+            flex-shrink: 0;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-number {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .passed-number {
+            color: #52c41a;
+        }
+
+        .failed-number {
+            color: #f5222d;
+        }
+
+        .skipped-number {
+            color: #1890ff;
+        }
+
+        .rate-number {
+            color: #1890ff;
+        }
+
+        .details {
+            flex: 1;
+            overflow: hidden;
+            padding: 0 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 {
+            color: #333;
+            margin: 20px 0 15px 0;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+            flex-shrink: 0;
+        }
+
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #f1f3f4;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #5f6368;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .case-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .case-name {
+            font-weight: 500;
+            color: #202124;
+        }
+
+        .case-description {
+            font-size: 13px;
+            color: #5f6368;
+            margin-top: 4px;
+        }
+
+        .toggle-button {
+            background: #f1f3f4;
+            border: none;
+            color: #5f6368;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
+        .toggle-button:hover {
+            background: #e8eaed;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-passed {
+            background-color: #e6ffed;
+            color: #34a853;
+        }
+
+        .status-failed {
+            background-color: #fce8e6;
+            color: #ea4335;
+        }
+
+        .status-skipped {
+            background-color: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .duration {
+            color: #5f6368;
+            font-size: 13px;
+        }
+
+        .steps-container {
+            display: none;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .step {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            background: white;
+        }
+
+        .step:last-child {
+            border-bottom: none;
+        }
+
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .step-info {
+            font-weight: 500;
+        }
+
+        .step-passed {
+            border-left: 3px solid #52c41a;
+        }
+
+        .step-failed {
+            border-left: 3px solid #f5222d;
+        }
+
+        .step-skipped {
+            border-left: 3px solid #1890ff;
+        }
+
+        .error {
+            color: #f5222d;
+            font-size: 13px;
+            margin-top: 8px;
+            padding: 10px;
+            background-color: #fff2f0;
+            border-radius: 4px;
+        }
+
+        .api-section {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+
+        .api-section-title {
+            font-weight: 600;
+            color: #1890ff;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .request-info, .response-info, .assertion-info {
+            background-color: white;
+            border: 1px solid #e9e9e9;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 12px 0;
+        }
+
+        .info-title {
+            margin: 0 0 10px 0;
+            color: #202124;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        pre {
+            background-color: #f5f5f5;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            line-height: 1.4;
+            margin: 0;
+            white-space: pre-wrap;
+            max-height: 300px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px;
+            color: #5f6368;
+            font-size: 13px;
+            border-top: 1px solid #e9ecef;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>API自动化测试报告</h1>
+    </header>
+    <div class="report-type">
+        <strong>报告类型:</strong> API测试报告
+        <p></p>
+        <strong>报告时间：</strong> 2026-01-13 20:51:14
+    </div>
+
+    <div class="summary">
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="summary-number">8</div>
+                <div class="summary-label">总用例数</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number passed-number">1</div>
+                <div class="summary-label">通过用例</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number failed-number">5</div>
+                <div class="summary-label">失败用例</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number skipped-number">2</div>
+                <div class="summary-label">跳过用例</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number rate-number">16.67%</div>
+                <div class="summary-label">通过率</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="details">
+        <h2>详细结果</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                <tr>
+                    <th>测试用例</th>
+                    <th>状态</th>
+                    <th>耗时</th>
+                </tr>
+                </thead>
+                <tbody>
+                
+                <tr id="case-1">
+                    <td>
+                        <div class="case-header" data-case-index="1">
+                            <div>
+                                <div class="case-name">平台管理员用户登录</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="1">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-failed">❌ 失败</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.30秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-1" class="steps-container">
+                    <td colspan="3">
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 1:</strong> request - 后台管理员登录
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> POST</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/admin/login/login</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "phone": "18300000000",
+  "password": "12345678"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 200</p>
+                                <p><strong>响应时间:</strong> 256.74ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 13 Jan 2026 12:51:12 GMT",
+  "Content-Type": "application/json",
+  "Content-Length": "1759",
+  "Connection": "keep-alive",
+  "Content-Encoding": "br"
+}</pre>
+                                
+                                
+                                <p><strong>响应JSON:</strong></p>
+                                <pre>{
+  "code": 200,
+  "message": "成功",
+  "data": {
+    "auth_menu": [
+      {
+        "index": 1,
+        "name": "首页",
+        "icon": "HomeFilled",
+        "permissionCode": "home",
+        "route": "/",
+        "pid": 0
+      },
+      {
+        "index": 2,
+        "name": "系统管理",
+        "icon": "Tools",
+        "permissionCode": "systemManage",
+        "route": "",
+        "pid": 0,
+        "children": [
+          {
+            "index": 3,
+            "name": "员工管理",
+            "icon": "",
+            "permissionCode": "systemManage:account",
+            "route": "/systemManage/acountList",
+            "pid": 2
+          },
+          {
+            "index": 9,
+            "name": "部门管理",
+            "icon": "",
+            "permissionCode": "systemManage:department",
+            "route": "/systemManage/departmentList",
+            "pid": 2
+          },
+          {
+            "index": 14,
+            "name": "角色管理",
+            "icon": "",
+            "permissionCode": "systemManage:role",
+            "route": "/systemManage/roleList",
+            "pid": 2
+          }
+        ]
+      },
+      {
+        "index": 33,
+        "name": "运营管理",
+        "icon": "Grid",
+        "permissionCode": "operationManage",
+        "route": "",
+        "pid": 0,
+        "children": [
+          {
+            "index": 136,
+            "name": "软件服务权益包",
+            "icon": "",
+            "permissionCode": "operationManage:serviceVoucherOfAgent",
+            "route": "/operationManage/serviceVoucherOfAgentList",
+            "pid": 33
+          }
+        ]
+      },
+      {
+        "index": 108,
+        "name": "学员管理",
+        "icon": "Avatar",
+        "permissionCode": "traineesManage",
+        "route": "",
+        "pid": 0,
+        "children": [
+          {
+            "index": 109,
+            "name": "家长账号",
+            "icon": "",
+            "permissionCode": "traineesManage:parentAccount",
+            "route": "/traineesManage/parentAccountList",
+            "pid": 108
+          },
+          {
+            "index": 110,
+            "name": "学员账号",
+            "icon": "",
+            "permissionCode": "traineesManage:studentAccount",
+            "route": "/traineesManage/studentAccountList",
+            "pid": 108
+          }
+        ]
+      },
+      {
+        "index": 118,
+        "name": "设备管理",
+        "icon": "BrushFilled",
+        "permissionCode": "equipmentOfAgent",
+        "route": "",
+        "pid": 0,
+        "children": [
+          {
+            "index": 119,
+            "name": "设备列表",
+            "icon": "",
+            "permissionCode": "equipmentOfAgent:equipmentOfAgent",
+            "route": "/equipmentOfAgent/equipmentOfAgentList",
+            "pid": 118
+          }
+        ]
+      },
+      {
+        "index": 124,
+        "name": "采购销售订单",
+        "icon": "List",
+        "permissionCode": "purchaseSaleOrder",
+        "route": "",
+        "pid": 0,
+        "children": [
+          {
+            "index": 125,
+            "name": "代理采购订单",
+            "icon": "",
+            "permissionCode": "purchaseSaleOrder:purchaseOrder",
+            "route": "/purchaseSaleOrder/purchaseOrderList",
+            "pid": 124
+          },
+          {
+            "index": 126,
+            "name": "市场销售订单",
+            "icon": "",
+            "permissionCode": "purchaseSaleOrder:salesOrder",
+            "route": "/purchaseSaleOrder/salesOrderList",
+            "pid": 124
+          }
+        ]
+      },
+      {
+        "index": 133,
+        "name": "库存管理",
+        "icon": "GoodsFilled",
+        "permissionCode": "districtStockManage",
+        "route": "",
+        "pid": 0,
+        "children": [
+          {
+            "index": 134,
+            "name": "库存信息",
+            "icon": "",
+            "permissionCode": "districtStockManage:districtStock",
+            "route": "/districtStockManage/districtStockList",
+            "pid": 133
+          }
+        ]
+      }
+    ],
+    "permissions": [
+      "home",
+      "systemManage",
+      "systemManage:account",
+      "systemManage:acount:add",
+      "systemManage:acount:edit",
+      "systemManage:acount:resetPwd",
+      "systemManage:acount:setStatus",
+      "systemManage:department",
+      "systemManage:department:add",
+      "systemManage:department:edit",
+      "systemManage:department:delete",
+      "systemManage:department:saveAdmin",
+      "systemManage:role",
+      "systemManage:role:add",
+      "systemManage:role:edit",
+      "systemManage:role:delete",
+      "operationManage",
+      "traineesManage",
+      "traineesManage:parentAccount",
+      "traineesManage:studentAccount",
+      "traineesManage:studentAccount:details",
+      "traineesManage:studentAccount:activate",
+      "traineesManage:studentAccount:unbindDevice",
+      "traineesManage:studentAccount:renew",
+      "equipmentOfAgent",
+      "equipmentOfAgent:equipmentOfAgent",
+      "purchaseSaleOrder",
+      "purchaseSaleOrder:purchaseOrder",
+      "purchaseSaleOrder:salesOrder",
+      "purchaseSaleOrder:purchaseOrder:add",
+      "purchaseSaleOrder:purchaseOrder:details",
+      "purchaseSaleOrder:purchaseOrder:cancel",
+      "purchaseSaleOrder:purchaseOrder:reSubmit",
+      "districtStockManage",
+      "districtStockManage:districtStock",
+      "operationManage:serviceVoucherOfAgent",
+      "purchaseSaleOrder:purchaseOrder:recipt",
+      "equipmentOfAgent:equipmentOfAgent:lock",
+      "purchaseSaleOrder:salesOrder:deviceSales",
+      "purchaseSaleOrder:salesOrder:serviceSales"
+    ],
+    "login_admin_info": {
+      "admin_id": 497,
+      "is_super": 2,
+      "account_type": 2,
+      "phone": "18300000000",
+      "username": "18300000000",
+      "name": "陆路路(区代)",
+      "nickname": "",
+      "avatar": "",
+      "platform_type": 13,
+      "status": 1,
+      "audit_status": 1,
+      "audit_reason": "",
+      "is_group_admin": 1,
+      "group_admin_id": 497,
+      "province_agent_admin_id": 494,
+      "identity_type": 2,
+      "qualification": [
+        "https://ddapu.oss-cn-chengdu.aliyuncs.com/daydayup_test/image/202601/20260105/7978aa3497220c2771e29705b17190b2.jpeg"
+      ],
+      "contact": "陆路路",
+      "contact_info": "18377777777",
+      "province_code": "510000",
+      "province_name": "四川省",
+      "city_code": "510100",
+      "city_name": "成都市",
+      "county_code": "510117",
+      "county_name": "郫都区",
+      "detail_address": "街道",
+      "create_admin_id": 494,
+      "created_at": "2026-01-05 16:50:10",
+      "is_tip_use_default_password": 1
+    },
+    "manage-token": "eyJ0eXAiOiJqd3QifQ.eyJzdWIiOiIxIiwiaXNzIjoiaHR0cDpcL1wvOiIsImV4cCI6MTc3MDkwMDY3MiwiaWF0IjoxNzY4MzA4NjcyLCJuYmYiOjE3NjgzMDg2NzIsInVpZCI6NDk3LCJzIjoiTWFld25uIiwianRpIjoiNWNjNTYzMTg3YzhkYTlmNTdhY2FmMDNhZDI5Y2Y0ZTAifQ.MzJmMjQ2NzQyMGY3MjA0MzY3YmFkMTcxMGMxYTQ3OTQ4ZDk2ZTBlMA",
+    "stock_notice": ""
+  },
+  "date": "2026-01-13 20:51:12"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 - 支持步骤级别的断言 -->
+
+    
+    <div class="api-section">
+        <div class="api-section-title">步骤断言 1</div>
+        <p><strong>断言类型:</strong> status_code</p>
+        
+        
+        <p><strong>期望值:</strong> 200</p>
+        
+        
+        <p><strong>实际结果:</strong> 200</p>
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="api-section">
+        <div class="api-section-title">步骤断言 2</div>
+        <p><strong>断言类型:</strong> response_body_contains</p>
+        
+        
+        <p><strong>期望值:</strong> manage-token</p>
+        
+        
+        <p><strong>实际结果:</strong> contains</p>
+        
+        
+        
+        
+        
+        
+    </div>
+    
+
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 assertion_1:</strong> assert - N/A
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+
+                            <!-- API响应信息 -->
+                            
+
+                            <!-- 断言信息 - 支持步骤级别的断言 -->
+
+    <div class="api-section">
+        <div class="api-section-title">断言信息</div>
+        <p><strong>断言类型:</strong> status_code</p>
+        
+        <p><strong>断言描述:</strong> 登录接口应返回200状态码</p>
+        
+        
+        <p><strong>期望值:</strong> 200</p>
+        
+        
+        <p><strong>实际结果:</strong> 200</p>
+        
+        
+        
+        
+        
+    </div>
+
+
+                        </div>
+                        
+                        <div class="step step-failed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 assertion_2:</strong> assert - N/A
+                                </div>
+                                
+                                <span class="status status-failed">失败</span>
+                                
+                            </div>
+                            
+                            <div class="error">错误: 断言失败: 响应体应包含 '1400', 实际未找到</div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+
+                            <!-- API响应信息 -->
+                            
+
+                            <!-- 断言信息 - 支持步骤级别的断言 -->
+
+    <div class="api-section">
+        <div class="api-section-title">断言信息</div>
+        <p><strong>断言类型:</strong> response_body_contains</p>
+        
+        <p><strong>断言描述:</strong> 登录失败返回错误code</p>
+        
+        
+        <p><strong>期望值:</strong> 1400</p>
+        
+        
+        <p><strong>实际结果:</strong> ！contains</p>
+        
+        
+        
+        
+        
+    </div>
+
+
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-2">
+                    <td>
+                        <div class="case-header" data-case-index="2">
+                            <div>
+                                <div class="case-name">未知用例</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="2">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-skipped">⏭️ 跳过</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.00秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-2" class="steps-container">
+                    <td colspan="3">
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-3">
+                    <td>
+                        <div class="case-header" data-case-index="3">
+                            <div>
+                                <div class="case-name">获取用户信息接口测试</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="3">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-passed">✅ 通过</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.03秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-3" class="steps-container">
+                    <td colspan="3">
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 1:</strong> request - 使用登录token获取用户信息
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> GET</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/admin/admin/getInfo</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Manage-Token": "eyJ0eXAiOiJqd3QifQ.eyJzdWIiOiIxIiwiaXNzIjoiaHR0cDpcL1wvOiIsImV4cCI6MTc3MDkwMDY3MiwiaWF0IjoxNzY4MzA4NjcyLCJuYmYiOjE3NjgzMDg2NzIsInVpZCI6NDk3LCJzIjoiTWFld25uIiwianRpIjoiNWNjNTYzMTg3YzhkYTlmNTdhY2FmMDNhZDI5Y2Y0ZTAifQ.MzJmMjQ2NzQyMGY3MjA0MzY3YmFkMTcxMGMxYTQ3OTQ4ZDk2ZTBlMA",
+  "platform-type": "1",
+  "app-platform": "1",
+  "app-os": "1",
+  "app-version": "2.30.412",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 200</p>
+                                <p><strong>响应时间:</strong> 30.19ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 13 Jan 2026 12:51:12 GMT",
+  "Content-Type": "application/json; charset=utf-8",
+  "Content-Length": "122",
+  "Connection": "keep-alive",
+  "Content-Encoding": "br"
+}</pre>
+                                
+                                
+                                <p><strong>响应JSON:</strong></p>
+                                <pre>{
+  "code": 1405,
+  "message": "用户所属平台类型错误",
+  "data": [],
+  "date": "2026-01-13 20:51:12"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 - 支持步骤级别的断言 -->
+
+    
+    <div class="api-section">
+        <div class="api-section-title">步骤断言 1</div>
+        <p><strong>断言类型:</strong> status_code</p>
+        
+        <p><strong>断言描述:</strong> 获取用户信息接口应返回200状态码</p>
+        
+        
+        <p><strong>期望值:</strong> 200</p>
+        
+        
+        <p><strong>实际结果:</strong> 200</p>
+        
+        
+        
+        
+        
+        
+    </div>
+    
+
+
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-4">
+                    <td>
+                        <div class="case-header" data-case-index="4">
+                            <div>
+                                <div class="case-name">未知用例</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="4">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-skipped">⏭️ 跳过</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.00秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-4" class="steps-container">
+                    <td colspan="3">
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-5">
+                    <td>
+                        <div class="case-header" data-case-index="5">
+                            <div>
+                                <div class="case-name">区代账号创建流程</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="5">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-failed">❌ 失败</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.90秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-5" class="steps-container">
+                    <td colspan="3">
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 1:</strong> method:load_config_data - 加载行政区数据
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+
+                            <!-- API响应信息 -->
+                            
+
+                            <!-- 断言信息 - 支持步骤级别的断言 -->
+
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 2:</strong> method:generate_all_types_fake_data - 生成faker测试数据
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+
+                            <!-- API响应信息 -->
+                            
+
+                            <!-- 断言信息 - 支持步骤级别的断言 -->
+
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 3:</strong> request - 获取平台设置的分润比例信息
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> GET</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_merchant/agent_manage/agent_public/selectData</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Manage-Token": "eyJ0eXAiOiJqd3QifQ.eyJzdWIiOiIxIiwiaXNzIjoiaHR0cDpcL1wvOiIsImV4cCI6MTc3MDkwMDY3MiwiaWF0IjoxNzY4MzA4NjcyLCJuYmYiOjE3NjgzMDg2NzIsInVpZCI6NDk3LCJzIjoiTWFld25uIiwianRpIjoiNWNjNTYzMTg3YzhkYTlmNTdhY2FmMDNhZDI5Y2Y0ZTAifQ.MzJmMjQ2NzQyMGY3MjA0MzY3YmFkMTcxMGMxYTQ3OTQ4ZDk2ZTBlMA",
+  "platform-type": "1",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 200</p>
+                                <p><strong>响应时间:</strong> 25.66ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 13 Jan 2026 12:51:13 GMT",
+  "Content-Type": "application/json; charset=utf-8",
+  "Content-Length": "122",
+  "Connection": "keep-alive",
+  "Content-Encoding": "br"
+}</pre>
+                                
+                                
+                                <p><strong>响应JSON:</strong></p>
+                                <pre>{
+  "code": 1405,
+  "message": "用户所属平台类型错误",
+  "data": [],
+  "date": "2026-01-13 20:51:13"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 - 支持步骤级别的断言 -->
+
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 4:</strong> request - 省代登录代理商后台
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> POST</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/admin/login/login</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "phone": "19940615830",
+  "password": "12345678"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 200</p>
+                                <p><strong>响应时间:</strong> 95.43ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 13 Jan 2026 12:51:13 GMT",
+  "Content-Type": "application/json",
+  "Content-Length": "1882",
+  "Connection": "keep-alive",
+  "Content-Encoding": "br"
+}</pre>
+                                
+                                
+                                <p><strong>响应JSON:</strong></p>
+                                <pre>{
+  "code": 200,
+  "message": "成功",
+  "data": {
+    "auth_menu": [
+      {
+        "index": 1,
+        "name": "首页",
+        "icon": "HomeFilled",
+        "permissionCode": "home",
+        "route": "/",
+        "pid": 0
+      },
+      {
+        "index": 2,
+        "name": "系统管理",
+        "icon": "Tools",
+        "permissionCode": "systemManage",
+        "route": "",
+        "pid": 0,
+        "children": [
+          {
+            "index": 3,
+            "name": "员工管理",
+            "icon": "",
+            "permissionCode": "systemManage:account",
+            "route": "/systemManage/acountList",
+            "pid": 2
+          },
+          {
+            "index": 9,
+            "name": "部门管理",
+            "icon": "",
+            "permissionCode": "systemManage:department",
+            "route": "/systemManage/departmentList",
+            "pid": 2
+          },
+          {
+            "index": 14,
+            "name": "角色管理",
+            "icon": "",
+            "permissionCode": "systemManage:role",
+            "route": "/systemManage/roleList",
+            "pid": 2
+          }
+        ]
+      },
+      {
+        "index": 33,
+        "name": "运营管理",
+        "icon": "Grid",
+        "permissionCode": "operationManage",
+        "route": "",
+        "pid": 0,
+        "children": [
+          {
+            "index": 162,
+            "name": "统计分析",
+            "icon": "",
+            "permissionCode": "operationManage:statisticsOfAgent",
+            "route": "/operationManage/agent/statisticsSaleList",
+            "pid": 33,
+            "children": [
+              {
+                "index": 163,
+                "name": "销售统计",
+                "icon": "",
+                "permissionCode": "operationManage:statisticsOfAgent:statisticsSale",
+                "route": "/operationManage/agent/statisticsSaleList",
+                "pid": 162
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "index": 88,
+        "name": "区代管理",
+        "icon": "Briefcase",
+        "permissionCode": "districtAgencyManage",
+        "route": "",
+        "pid": 0,
+        "children": [
+          {
+            "index": 89,
+            "name": "区代（学校）管理",
+            "icon": "",
+            "permissionCode": "districtAgencyManage:districtAgency",
+            "route": "/districtAgencyManage/districtAgencyList",
+            "pid": 88,
+            "children": [
+              {
+                "index": 90,
+                "name": "新代理进件",
+                "icon": "",
+                "permissionCode": "districtAgencyManage:districtAgencyNot",
+                "route": "/districtAgencyManage/districtAgencyNotList",
+                "pid": 89
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "index": 124,
+        "name": "采购销售订单",
+        "icon": "List",
+        "permissionCode": "purchaseSaleOrder",
+        "route": "",
+        "pid": 0,
+        "children": [
+          {
+            "index": 125,
+            "name": "代理采购订单",
+            "icon": "",
+            "permissionCode": "purchaseSaleOrder:purchaseOrder",
+            "route": "/purchaseSaleOrder/purchaseOrderList",
+            "pid": 124
+          },
+          {
+            "index": 126,
+            "name": "市场销售订单",
+            "icon": "",
+            "permissionCode": "purchaseSaleOrder:salesOrder",
+            "route": "/purchaseSaleOrder/salesOrderList",
+            "pid": 124
+          }
+        ]
+      },
+      {
+        "index": 171,
+        "name": "财务管理",
+        "icon": "Platform",
+        "permissionCode": "financialManageOfAgent",
+        "route": "",
+        "pid": 0,
+        "children": [
+          {
+            "index": 172,
+            "name": "结算报表",
+            "icon": "",
+            "permissionCode": "financialManageOfAgent:settlementReport",
+            "route": "/financialManageOfAgent/settlementReport/settlementReportList",
+            "pid": 171,
+            "children": [
+              {
+                "index": 178,
+                "name": "明细",
+                "icon": "",
+                "permissionCode": "financialManageOfAgent:settlementReport:details",
+                "route": "",
+                "pid": 172
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "permissions": [
+      "home",
+      "systemManage",
+      "systemManage:account",
+      "systemManage:acount:add",
+      "systemManage:acount:edit",
+      "systemManage:acount:resetPwd",
+      "systemManage:acount:setStatus",
+      "systemManage:department",
+      "systemManage:department:add",
+      "systemManage:department:edit",
+      "systemManage:department:delete",
+      "systemManage:department:saveAdmin",
+      "systemManage:role",
+      "systemManage:role:add",
+      "systemManage:role:edit",
+      "systemManage:role:delete",
+      "operationManage",
+      "districtAgencyManage",
+      "districtAgencyManage:districtAgency",
+      "districtAgencyManage:districtAgencyNot",
+      "districtAgencyManage:districtAgency:add",
+      "districtAgencyManage:districtAgency:details",
+      "districtAgencyManage:districtAgency:user",
+      "districtAgencyManage:districtAgency:stock",
+      "districtAgencyManage:districtAgency:sale",
+      "districtAgencyManage:districtAgency:student",
+      "districtAgencyManage:districtAgency:log",
+      "districtAgencyManage:districtAgency:cancelAudit",
+      "districtAgencyManage:districtAgency:reSubmit",
+      "districtAgencyManage:districtAgency:delete",
+      "purchaseSaleOrder",
+      "purchaseSaleOrder:purchaseOrder",
+      "purchaseSaleOrder:salesOrder",
+      "purchaseSaleOrder:purchaseOrder:details",
+      "purchaseSaleOrder:purchaseOrder:audit",
+      "purchaseSaleOrder:salesOrder:deviceSales",
+      "purchaseSaleOrder:salesOrder:serviceSales",
+      "operationManage:statisticsOfAgent",
+      "operationManage:statisticsOfAgent:statisticsSale",
+      "operationManage:statisticsOfAgent:statisticsSaleDistrict",
+      "financialManageOfAgent",
+      "financialManageOfAgent:settlementReport",
+      "financialManageOfAgent:settlementReport:details"
+    ],
+    "login_admin_info": {
+      "admin_id": 616,
+      "is_super": 2,
+      "account_type": 2,
+      "phone": "19940615830",
+      "username": "19940615830",
+      "name": "时刻科技有限公司(省代)",
+      "nickname": "",
+      "avatar": "",
+      "platform_type": 11,
+      "status": 1,
+      "audit_status": 1,
+      "audit_reason": "",
+      "is_group_admin": 1,
+      "group_admin_id": 616,
+      "province_agent_admin_id": 616,
+      "identity_type": 1,
+      "qualification": [
+        "https://ddapu.oss-cn-chengdu.aliyuncs.com/daydayup_test/image/202512/20251204/6a451be2b0e3c8d35cdf955afca493fc.jpg"
+      ],
+      "contact": "陈雷",
+      "contact_info": "19940615830",
+      "province_code": "810000",
+      "province_name": "",
+      "city_code": "810200",
+      "city_name": "",
+      "county_code": "810201",
+      "county_name": "",
+      "detail_address": "江苏省合山市西峰傅路g座 737313",
+      "create_admin_id": 286,
+      "created_at": "2026-01-08 10:23:22",
+      "is_tip_use_default_password": 1
+    },
+    "manage-token": "eyJ0eXAiOiJqd3QifQ.eyJzdWIiOiIxIiwiaXNzIjoiaHR0cDpcL1wvOiIsImV4cCI6MTc3MDkwMDY3MywiaWF0IjoxNzY4MzA4NjczLCJuYmYiOjE3NjgzMDg2NzMsInVpZCI6NjE2LCJzIjoiV2k1ajZBIiwianRpIjoiNjZlZmRjYTg1ZDdlZTIxMmZkMDJmNGE0N2QzMjkzMDMifQ.YzkzZTUyYzE4ODk2ZTE2ZjhhMzg1MzhiNzRmODk1MjIyMDRmNzRhYw",
+    "stock_notice": "区代库存不足，请及时查看库存情况"
+  },
+  "date": "2026-01-13 20:51:13"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 - 支持步骤级别的断言 -->
+
+    
+    <div class="api-section">
+        <div class="api-section-title">步骤断言 1</div>
+        <p><strong>断言类型:</strong> status_code</p>
+        
+        
+        <p><strong>期望值:</strong> 200</p>
+        
+        
+        <p><strong>实际结果:</strong> 200</p>
+        
+        
+        
+        
+        
+        
+    </div>
+    
+
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 5:</strong> method:generate_api_fake_data - 生成新用户名
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+
+                            <!-- API响应信息 -->
+                            
+
+                            <!-- 断言信息 - 支持步骤级别的断言 -->
+
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 6:</strong> method:generate_unique_phone_api - 生成唯一手机号
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+
+                            <!-- API响应信息 -->
+                            
+
+                            <!-- 断言信息 - 支持步骤级别的断言 -->
+
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 7:</strong> method:double_md5 - 生成加密令牌和时间戳
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+
+                            <!-- API响应信息 -->
+                            
+
+                            <!-- 断言信息 - 支持步骤级别的断言 -->
+
+
+                        </div>
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 8:</strong> request - 获取验证码
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> POST</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_province/district_manage/phoneCode</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Manage-Token": "eyJ0eXAiOiJqd3QifQ.eyJzdWIiOiIxIiwiaXNzIjoiaHR0cDpcL1wvOiIsImV4cCI6MTc3MDkwMDY3MywiaWF0IjoxNzY4MzA4NjczLCJuYmYiOjE3NjgzMDg2NzMsInVpZCI6NjE2LCJzIjoiV2k1ajZBIiwianRpIjoiNjZlZmRjYTg1ZDdlZTIxMmZkMDJmNGE0N2QzMjkzMDMifQ.YzkzZTUyYzE4ODk2ZTE2ZjhhMzg1MzhiNzRmODk1MjIyMDRmNzRhYw",
+  "platform-type": "11",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "admin_id": null,
+  "phone": "19981538325",
+  "timestamp": "1768308673803",
+  "sign": "6a3a8cd5eeb39b535bcc7681b154d2da"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 200</p>
+                                <p><strong>响应时间:</strong> 33.02ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 13 Jan 2026 12:51:13 GMT",
+  "Content-Type": "application/json",
+  "Content-Length": "76",
+  "Connection": "keep-alive",
+  "Content-Encoding": "br"
+}</pre>
+                                
+                                
+                                <p><strong>响应JSON:</strong></p>
+                                <pre>{
+  "code": 200,
+  "message": "成功",
+  "data": true,
+  "date": "2026-01-13 20:51:13"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 - 支持步骤级别的断言 -->
+
+
+                        </div>
+                        
+                        <div class="step step-failed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 9:</strong> request - 添加区代理
+                                </div>
+                                
+                                <span class="status status-failed">失败</span>
+                                
+                            </div>
+                            
+                            <div class="error">错误: 断言失败: 响应体应包含 '成功', 实际未找到</div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> POST</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_province/district_manage/add</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "Manage-Token": "eyJ0eXAiOiJqd3QifQ.eyJzdWIiOiIxIiwiaXNzIjoiaHR0cDpcL1wvOiIsImV4cCI6MTc3MDkwMDY3MywiaWF0IjoxNzY4MzA4NjczLCJuYmYiOjE3NjgzMDg2NzMsInVpZCI6NjE2LCJzIjoiV2k1ajZBIiwianRpIjoiNjZlZmRjYTg1ZDdlZTIxMmZkMDJmNGE0N2QzMjkzMDMifQ.YzkzZTUyYzE4ODk2ZTE2ZjhhMzg1MzhiNzRmODk1MjIyMDRmNzRhYw",
+  "platform-type": "11",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "name": "同兴万点科技有限公司(区代)",
+  "province": "",
+  "city": "",
+  "district": "",
+  "detail_address": "海南省汕尾县永川吴街v座 916068",
+  "identity_type": 2,
+  "qualificationUrl": "",
+  "qualification": [
+    "https://ddapu.oss-cn-chengdu.aliyuncs.com/daydayup_test/image/202512/20251210/03bdc60e56bcb1f470f880c51fcbd0c1.png"
+  ],
+  "contact": "兰芳",
+  "contact_info": "19981538325",
+  "phone": "19981538325",
+  "code": "123456",
+  "password": "",
+  "agent_mode": 2,
+  "agent_province_code": "810000",
+  "entry_fee": 5000,
+  "margin_deposit": 5000,
+  "province_phone_sale_type": "$profit_infos_district_phone_sale_type",
+  "province_phone_sale_value": "$profit_infos_district_phone_sale_value",
+  "province_software_first_type": 1,
+  "province_software_first_value": 0,
+  "province_software_renew_type": 1,
+  "province_software_renew_value": 0,
+  "credit_period": "$profit_infos_district_credit_period",
+  "settlement_bank": "自动化测试银行（省代）",
+  "opening_bank": "自动化测试银行支行（省代）",
+  "bank_account": "88888888888",
+  "region": [
+    "810000",
+    "810200",
+    "810201"
+  ],
+  "agent_area": [
+    "810000",
+    "810200",
+    "810201"
+  ],
+  "phone_sale_type": "$profit_infos_district_phone_sale_type",
+  "phone_sale_value": "$profit_infos_district_phone_sale_value",
+  "software_first_type": "$profit_infos_district_software_first_type",
+  "software_first_value": "$profit_infos_district_software_first_value",
+  "software_renew_type": "$profit_infos_district_software_renew_type",
+  "software_renew_value": "$profit_infos_district_software_renew_value",
+  "province_code": "810000",
+  "city_code": "810200",
+  "county_code": "810201",
+  "agent_city_code": "810200",
+  "agent_county_code": "810201"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 200</p>
+                                <p><strong>响应时间:</strong> 33.06ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 13 Jan 2026 12:51:13 GMT",
+  "Content-Type": "application/json; charset=utf-8",
+  "Content-Length": "114",
+  "Connection": "keep-alive",
+  "Content-Encoding": "br"
+}</pre>
+                                
+                                
+                                <p><strong>响应JSON:</strong></p>
+                                <pre>{
+  "code": 1400,
+  "message": "结算账期类型错误",
+  "data": [],
+  "date": "2026-01-13 20:51:13"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 - 支持步骤级别的断言 -->
+
+    
+    <div class="api-section">
+        <div class="api-section-title">步骤断言 1</div>
+        <p><strong>断言类型:</strong> status_code</p>
+        
+        <p><strong>断言描述:</strong> 登录接口应返回200状态码</p>
+        
+        
+        <p><strong>期望值:</strong> 200</p>
+        
+        
+        <p><strong>实际结果:</strong> 200</p>
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="api-section">
+        <div class="api-section-title">步骤断言 2</div>
+        <p><strong>断言类型:</strong> response_body_contains</p>
+        
+        <p><strong>断言描述:</strong> 登录接口massage应返回成功</p>
+        
+        
+        <p><strong>期望值:</strong> 成功</p>
+        
+        
+        <p><strong>实际结果:</strong> ！contains</p>
+        
+        
+        
+        
+        
+        
+        <p><strong>错误信息:</strong> 断言失败: 响应体应包含 '成功', 实际未找到</p>
+        
+    </div>
+    
+
+
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-6">
+                    <td>
+                        <div class="case-header" data-case-index="6">
+                            <div>
+                                <div class="case-name">采购订单流程</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="6">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-failed">❌ 失败</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.03秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-6" class="steps-container">
+                    <td colspan="3">
+                        
+                        <div class="step step-failed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 1:</strong> request - 区代创建订单
+                                </div>
+                                
+                                <span class="status status-failed">失败</span>
+                                
+                            </div>
+                            
+                            <div class="error">错误: 断言失败: 响应体应包含 '成功', 实际未找到</div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> POST</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_district/order/createOrder</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "manage-token": "$district_token",
+  "platform-type": "13",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "order_no": "",
+  "product_list": [
+    {
+      "product_id": 3,
+      "name": "OPPO K13 Turbo 疾风散热引擎 潮汐引擎 5G大容量电池手机",
+      "image_url": [
+        "https://img12.360buyimg.com/n5/s720x720_jfs/t1/321472/15/24746/24589/689aabe3F1c3723e8/6f0d4fef3916301e.jpg.avif",
+        "https://img12.360buyimg.com/n5/s720x720_jfs/t1/321472/15/24746/24589/689aabe3F1c3723e8/6f0d4fef3916301e.jpg.avif",
+        "https://img12.360buyimg.com/n5/s720x720_jfs/t1/319625/14/24238/64388/689aab4bF1d4b2230/3ead943a11c275a7.png.avif"
+      ],
+      "product_category_id": 1,
+      "type": 1,
+      "market_price": "1299.00",
+      "sale_price": "1166.66",
+      "cost_price": "1156.66",
+      "count": 4,
+      "days": 0,
+      "spec_desc": "外观：骑士白；版本8GB+128GB",
+      "buy_count": 0,
+      "product_category_name": "手机",
+      "stock_count": 1,
+      "purchase_price": "0"
+    },
+    {
+      "product_id": 2,
+      "name": "OPPO Reno14 学生机",
+      "image_url": [
+        "https://img14.360buyimg.com/n5/s720x720_jfs/t1/306486/29/1821/73795/682435f3Fe79859f4/30bbbc1221c986af.jpg.avif",
+        "https://img14.360buyimg.com/n5/s720x720_jfs/t1/316345/40/25905/22617/689c06d9F4044548d/54d4b16a4d1e5190.jpg.avif",
+        "https://img14.360buyimg.com/n5/s720x720_jfs/t1/316345/40/25905/22617/689c06d9F4044548d/54d4b16a4d1e5190.jpg.avif"
+      ],
+      "product_category_id": 1,
+      "type": 1,
+      "market_price": "2066.88",
+      "sale_price": "1988.88",
+      "cost_price": "1978.88",
+      "count": 3,
+      "days": 0,
+      "spec_desc": "内存：8G；存储：512；颜色：黑色",
+      "buy_count": 0,
+      "product_category_name": "手机",
+      "stock_count": 2,
+      "purchase_price": "0"
+    },
+    {
+      "product_id": 4,
+      "name": "学生端 服务权益包",
+      "image_url": [
+        "https://img12.360buyimg.com/n5/s720x720_jfs/t1/321472/15/24746/24589/689aabe3F1c3723e8/6f0d4fef3916301e.jpg.avif"
+      ],
+      "product_category_id": 5,
+      "type": 2,
+      "market_price": "1988.88",
+      "sale_price": "1666.68",
+      "cost_price": "1583.35",
+      "count": 1,
+      "days": 365,
+      "spec_desc": "365天",
+      "buy_count": 0,
+      "product_category_name": "服务",
+      "stock_count": 3,
+      "purchase_price": "0"
+    }
+  ]
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 200</p>
+                                <p><strong>响应时间:</strong> 27.90ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 13 Jan 2026 12:51:13 GMT",
+  "Content-Type": "application/json; charset=utf-8",
+  "Content-Length": "93",
+  "Connection": "keep-alive",
+  "Content-Encoding": "br"
+}</pre>
+                                
+                                
+                                <p><strong>响应JSON:</strong></p>
+                                <pre>{
+  "code": 1000,
+  "message": "登录过期",
+  "data": [],
+  "date": "2026-01-13 20:51:13"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 - 支持步骤级别的断言 -->
+
+    
+    <div class="api-section">
+        <div class="api-section-title">步骤断言 1</div>
+        <p><strong>断言类型:</strong> status_code</p>
+        
+        
+        <p><strong>期望值:</strong> 200</p>
+        
+        
+        <p><strong>实际结果:</strong> 200</p>
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="api-section">
+        <div class="api-section-title">步骤断言 2</div>
+        <p><strong>断言类型:</strong> response_body_contains</p>
+        
+        
+        <p><strong>期望值:</strong> 成功</p>
+        
+        
+        <p><strong>实际结果:</strong> ！contains</p>
+        
+        
+        
+        
+        
+        
+        <p><strong>错误信息:</strong> 断言失败: 响应体应包含 '成功', 实际未找到</p>
+        
+    </div>
+    
+
+
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-7">
+                    <td>
+                        <div class="case-header" data-case-index="7">
+                            <div>
+                                <div class="case-name">订单审核流程</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="7">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-failed">❌ 失败</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.06秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-7" class="steps-container">
+                    <td colspan="3">
+                        
+                        <div class="step step-failed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 1:</strong> request - 省代审核订单不通过
+                                </div>
+                                
+                                <span class="status status-failed">失败</span>
+                                
+                            </div>
+                            
+                            <div class="error">错误: 断言失败: 响应体应包含 '成功', 实际未找到</div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">请求信息</div>
+                                
+                                <p><strong>方法:</strong> PUT</p>
+                                
+                                
+                                <p><strong>URL:</strong> https://test-admin.ddapu.com/api/agent_province/order/setAuditStatus</p>
+                                
+                                
+                                <p><strong>请求头:</strong></p>
+                                <pre>{
+  "manage-token": "eyJ0eXAiOiJqd3QifQ.eyJzdWIiOiIxIiwiaXNzIjoiaHR0cDpcL1wvOiIsImV4cCI6MTc3MDkwMDY3MywiaWF0IjoxNzY4MzA4NjczLCJuYmYiOjE3NjgzMDg2NzMsInVpZCI6NjE2LCJzIjoiV2k1ajZBIiwianRpIjoiNjZlZmRjYTg1ZDdlZTIxMmZkMDJmNGE0N2QzMjkzMDMifQ.YzkzZTUyYzE4ODk2ZTE2ZjhhMzg1MzhiNzRmODk1MjIyMDRmNzRhYw",
+  "platform-type": "11",
+  "Content-Type": "application/json",
+  "User-Agent": "AutomationTestClient/1.0"
+}</pre>
+                                
+                                
+                                
+                                
+                                <p><strong>requestBody:</strong></p>
+                                <pre>{
+  "order_no": "$order_no",
+  "audit_status": 3,
+  "audit_reason": "省代审核拒绝"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- API响应信息 -->
+                            
+                            <div class="api-section">
+                                <div class="api-section-title">响应信息</div>
+                                <p><strong>状态码:</strong> 200</p>
+                                <p><strong>响应时间:</strong> 60.01ms</p>
+                                
+                                <p><strong>响应头:</strong></p>
+                                <pre>{
+  "Server": "nginx/1.20.1",
+  "Date": "Tue, 13 Jan 2026 12:51:14 GMT",
+  "Content-Type": "application/json; charset=utf-8",
+  "Content-Length": "105",
+  "Connection": "keep-alive",
+  "Content-Encoding": "br"
+}</pre>
+                                
+                                
+                                <p><strong>响应JSON:</strong></p>
+                                <pre>{
+  "code": 1400,
+  "message": "订单信息异常",
+  "data": [],
+  "date": "2026-01-13 20:51:14"
+}</pre>
+                                
+                            </div>
+                            
+
+                            <!-- 断言信息 - 支持步骤级别的断言 -->
+
+    
+    <div class="api-section">
+        <div class="api-section-title">步骤断言 1</div>
+        <p><strong>断言类型:</strong> status_code</p>
+        
+        
+        <p><strong>期望值:</strong> 200</p>
+        
+        
+        <p><strong>实际结果:</strong> 200</p>
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="api-section">
+        <div class="api-section-title">步骤断言 2</div>
+        <p><strong>断言类型:</strong> response_body_contains</p>
+        
+        
+        <p><strong>期望值:</strong> 成功</p>
+        
+        
+        <p><strong>实际结果:</strong> ！contains</p>
+        
+        
+        
+        
+        
+        
+        <p><strong>错误信息:</strong> 断言失败: 响应体应包含 '成功', 实际未找到</p>
+        
+    </div>
+    
+
+
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr id="case-8">
+                    <td>
+                        <div class="case-header" data-case-index="8">
+                            <div>
+                                <div class="case-name">设备导入接口测试</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="8">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-failed">❌ 失败</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        0.17秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-8" class="steps-container">
+                    <td colspan="3">
+                        
+                        <div class="step step-failed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 1:</strong> method:update_order_xls - 更新XLS文件中的订单编号和设备码
+                                </div>
+                                
+                                <span class="status status-failed">失败</span>
+                                
+                            </div>
+                            
+                            <div class="error">错误: Excel文件不存在: F:\得得阿普\webui_automation_framework-master\webui_automation_framework-master\test_data\order_template.xlsx</div>
+                            
+
+                            <!-- API请求信息 -->
+                            
+
+                            <!-- API响应信息 -->
+                            
+
+                            <!-- 断言信息 - 支持步骤级别的断言 -->
+
+
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer">
+        生成时间: 2026-01-13 20:51:14
+    </div>
+</div>
+
+<script>    // 页面加载完成后绑定事件
+    document.addEventListener('DOMContentLoaded', function () {
+        // 为所有按钮添加独立的点击事件
+        const toggleButtons = document.querySelectorAll('.toggle-button');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.stopPropagation(); // 阻止事件冒泡
+                const index = this.getAttribute('data-btn-index');
+                toggleSteps(index);
+            });
+        });
+
+        // 为所有用例标题添加点击事件（不包括按钮本身）
+        const caseHeaders = document.querySelectorAll('.case-header');
+        caseHeaders.forEach(header => {
+            header.addEventListener('click', function (e) {
+                // 如果点击的不是按钮，则展开/收起步骤
+                if (!e.target.classList.contains('toggle-button') && e.target.tagName !== 'BUTTON') {
+                    const index = this.getAttribute('data-case-index');
+                    toggleSteps(index);
+                }
+            });
+        });
+
+        // 默认展开失败的用例
+        
+        
+        toggleSteps(1);
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        toggleSteps(5);
+        
+        
+        
+        toggleSteps(6);
+        
+        
+        
+        toggleSteps(7);
+        
+        
+        
+        toggleSteps(8);
+        
+        
+    });
+
+    function toggleSteps(caseIndex) {
+        try {
+            const stepsRow = document.getElementById('steps-' + caseIndex);
+            const toggleButton = document.querySelector('[data-btn-index="' + caseIndex + '"]');
+
+            if (!stepsRow || !toggleButton) {
+                console.error('无法找到元素:', caseIndex);
+                return;
+            }
+
+            if (stepsRow.style.display === 'table-row') {
+                stepsRow.style.display = 'none';
+                toggleButton.textContent = '展开步骤';
+            } else {
+                stepsRow.style.display = 'table-row';
+                toggleButton.textContent = '收起步骤';
+            }
+        } catch (error) {
+            console.error('切换步骤时出错:', error);
+        }
+    }
+</script>
+</body>
+</html>
