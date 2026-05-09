@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI助手功能测试报告</title>
+    <style>        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .report-type {
+            background-color: #e6f7ff;
+            padding: 12px 20px;
+            border-left: 4px solid #1890ff;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .summary {
+            background-color: #f8f9fa;
+            padding: 15px 30px;
+            border-bottom: 1px solid #e9ecef;
+            flex-shrink: 0;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            color: #6c757d;
+            font-size: 13px;
+        }
+
+
+        .passed-number { color: #52c41a; }
+        .failed-number { color: #f5222d; }
+        .skipped-number { color: #1890ff; }
+        .rate-number { color: #1890ff; }
+
+        .details {
+            flex: 1;
+            overflow: hidden;
+            padding: 0 30px 20px 30px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        h2 {
+            color: #333;
+            margin: 15px 0 10px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            margin-bottom: 0;
+            min-height: 0;
+        }
+
+
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #f1f3f4;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #5f6368;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: #f8f9fa; }
+
+        .case-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .case-name {
+            font-weight: 500;
+            color: #202124;
+        }
+
+        .case-description {
+            font-size: 13px;
+            color: #5f6368;
+            margin-top: 4px;
+        }
+
+        .toggle-button {
+            background: #f1f3f4;
+            border: none;
+            color: #5f6368;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
+        .toggle-button:hover { background: #e8eaed; }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-passed { background-color: #e6ffed; color: #34a853; }
+        .status-failed { background-color: #fce8e6; color: #ea4335; }
+        .status-skipped { background-color: #e6f7ff; color: #1890ff; }
+
+        .duration { color: #5f6368; font-size: 13px; }
+
+        .steps-container {
+            display: none;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .step {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            background: white;
+        }
+
+        .step:last-child { border-bottom: none; }
+
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .step-info { font-weight: 500; }
+        .step-passed { border-left: 3px solid #52c41a; }
+        .step-failed { border-left: 3px solid #f5222d; }
+        .step-skipped { border-left: 3px solid #1890ff; }
+
+        .error {
+            color: #f5222d;
+            font-size: 13px;
+            margin-top: 8px;
+            padding: 10px;
+            background-color: #fff2f0;
+            border-radius: 4px;
+        }
+
+        /* AI对话专用样式 */
+        .conversation-section {
+            margin: 15px 0;
+            padding: 15px;
+            background: #fafafa;
+            border-radius: 6px;
+            border-left: 4px solid #1890ff;
+        }
+
+        .conversation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .question-box {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #e8e8e8;
+        }
+
+        .question-label {
+            font-weight: 600;
+            color: #1890ff;
+            margin-bottom: 5px;
+        }
+
+        .thought-box {
+            background: #fff7e6;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #ffd591;
+            border-left: 4px solid #fa8c16;
+        }
+
+        .thought-label {
+            font-weight: 600;
+            color: #fa8c16;
+            margin-bottom: 5px;
+        }
+
+        .answer-box {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #e8e8e8;
+            max-height: 400px;
+            overflow-y: auto;
+            border-left: 4px solid #52c41a;
+        }
+
+        .answer-label {
+            font-weight: 600;
+            color: #52c41a;
+            margin-bottom: 5px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            border: 1px solid #e8e8e8;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1890ff;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+
+        .assertion-list { margin: 10px 0; }
+
+        .assertion-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .assertion-passed {
+            background: #e6ffed;
+            border-left: 3px solid #52c41a;
+        }
+
+        .assertion-failed {
+            background: #fff1f0;
+            border-left: 3px solid #f5222d;
+        }
+
+        .round-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #e6f7ff;
+            color: #1890ff;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .content-toggle {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: white;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+        }
+
+        .content-toggle:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .content-toggle:active {
+            transform: translateY(0);
+        }
+
+        .content-full {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.8;
+            max-height: none;
+            overflow: visible;
+        }
+
+        .content-preview {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        .content-preview::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.9));
+            pointer-events: none;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px;
+            color: #5f6368;
+            font-size: 13px;
+            border-top: 1px solid #e9ecef;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .summary-grid { grid-template-columns: 1fr; }
+            table { font-size: 14px; }
+            th, td { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>AI助手功能测试报告</h1>
+    </header>
+    <div class="report-type">
+        <strong>报告类型:</strong> 测试报告
+        <p></p>
+        <strong>报告时间：</strong> 2026-05-09 19:12:38
+    </div>
+
+    <div class="summary">
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="summary-number">1</div>
+                <div class="summary-label">总用例数</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number passed-number">1</div>
+                <div class="summary-label">通过用例</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number failed-number">0</div>
+                <div class="summary-label">失败用例</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number skipped-number">0</div>
+                <div class="summary-label">跳过用例</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number rate-number">100.0%</div>
+                <div class="summary-label">通过率</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="details">
+        <h2>详细结果</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                <tr>
+                    <th>测试用例</th>
+                    <th>状态</th>
+                    <th>耗时</th>
+                </tr>
+                </thead>
+                <tbody>
+                
+                <tr id="case-1">
+                    <td>
+                        <div class="case-header" data-case-index="1">
+                            <div>
+                                <div class="case-name">AI助手接口压力测试</div>
+                                
+                            </div>
+                            <button class="toggle-button" data-btn-index="1">展开步骤</button>
+                        </div>
+                    </td>
+                    <td>
+                        
+                        <span class="status status-passed">✅ 通过</span>
+                        
+                    </td>
+                    <td class="duration">
+                        
+                        
+                        75.70秒
+                        
+                    </td>
+                </tr>
+                <tr id="steps-1" class="steps-container">
+                    <td colspan="3">
+                        
+                        <div class="step step-passed">
+                            <div class="step-header">
+                                <div class="step-info">
+                                    <strong>步骤 1:</strong> single_turn_test - 单轮对话功能测试
+                                </div>
+                                
+                                <span class="status status-passed">通过</span>
+                                
+                            </div>
+                            
+
+                            <!-- AI对话测试结果展示 -->
+                            
+                            <div class="conversation-section">
+                                <div class="api-section-title">
+                                    
+                                    📝 单轮对话测试结果 (共 1 个测试)
+                                    
+                                </div>
+
+                                
+                                <div class="conversation-section" style="margin-top: 15px;">
+                                    
+                                    <div class="conversation-header">
+                                        <span class="round-indicator">测试 #1</span>
+                                        <span class="status status-passed">
+                                            ✅ 通过
+                                        </span>
+                                    </div>
+
+                                    <div class="question-box">
+                                        <div class="question-label">❓ 问题:</div>
+                                        <div>社包工积金养老医疗那些</div>
+                                    </div>
+
+                                    
+                                    <div class="thought-box">
+                                        <div class="thought-label">🤔 AI思考过程 (1943 字符)</div>
+                                        <div id="thought-single-1" class="content-preview"><think>用户询问的是"社包工积金养老医疗那些"，这个表述不太清楚，但大致可以理解为想了解社保（社会保险）、公积金、养老、医疗等相关政策制度。
+
+根据识别步骤：
+1. 用户问的是社保、公积金、养老、医疗方面的内容
+2. 这属于人力政策制度方面的问题（社保制度、福利制度）
+3. 告知用户识别到这是社保制度相关问题
+4. 可用的MCP工具中，有 query_social_insurance 可以查询社保政策
+5. 用户提到"社包工积金"（可能是社保公积金）、养老、医疗
+
+我需要先确认用户具体想了解什么。但从问题来看，用户可能想了解：
+- 社保政策（养老、医疗等）
+- 公积金政策
+
+让我先查询社保相关的政策。知识库优先策略要求我先尝试检索知识库，但这个工具是 query_social_insurance，它本身就是查询社保政策的。
+
+我应该使用 query_social_insurance 工具来回答用户的问题。但用户的问题表述不太清楚，我需要先尝试查询，看看能返回什么内容。
+
+参数：
+- query: 可以是"社保政策、公积金、养老保险、医疗保险"等
+
+
+- authorization 和 loginname 使用固定的默认值
+</think>
+
+您好！我识别到您想了解的是**社保公积金相关政策制度**（包括养老、医疗等保险缴纳比例、基数等）。
+
+让我为您查询相关政策：
+<think>用户询问的是"社包工积金养老医疗那些"，这个表述不太清楚，但大致可以理解为想了解社保（社会保险）、公积金、养老、医疗等相关政策制度。
+
+根据识别步骤：
+1. 用户问的是社保、公积金、养老、医疗方面的内容
+2. 这属于人力政策制度方面的问题（社保制度、福利制度）
+3. 告知用户识别到这是社保制度相关问题
+4. 可用的MCP工具中，有 query_social_insurance 可以查询社保政策
+5. 用户提到"社包工积金"（可能是社保公积金）、养老、医疗
+
+我需要先确认用户具体想了解什么。但从问题来看，用户可能想了解：
+- 社保政策（养老、医疗等）
+- 公积金政策
+
+让我先查询社保相关的政策。知识库优先策略要求我先尝试检索知识库，但这个工具是 query_social_insurance，它本身就是查询社保政策的。
+
+我应该使用 query_social_insurance 工具来回答用户的问题。但用户的问题表述不太清楚，我需要先尝试查询，看看能返回什么内容。
+
+参数：
+- query: 可以是"社保政策、公积金、养老保险、医疗保险"等
+
+
+- authorization 和 loginname 使用固定的默认值
+</think>
+
+您好！我识别到您想了解的是**社保公积金相关政策制度**（包括养老、医疗等保险缴纳比例、基数等）。
+
+让我为您查询相关政策：
+根据用户的问题，我需要先识别出用户问的是关于社保（养老、医疗等）和公积金的缴纳比例、基数政策。这是一个政策制度类的问题，属于"社保制度"方面。
+
+用户没有明确说出具体地区，我需要询问用户的工作地区才能给出准确的答案。从知识库检索结果来看，目前公司涉及的地区有：北京、成都、成都（环保公司）、西藏四个地区。
+
+我应该直接输出知识库返回的结果，但是要整理得清晰易读。根据知识库内容，我可以给用户一个清晰的回复，告诉他们需要提供地区信息。
+
+让我直接返回知识库的检索结果内容，但需要进行适当的整理和排版，让用户更容易理解。
+</think>
+
+您好！感谢您的咨询。
+
+关于社保（养老、医疗等）和公积金的缴纳比例、基数等政策，具体数据因**所在地区**不同而有所差异。
+
+目前我们公司涉及的地区包括：
+
+| 地区 | 社保方案 |
+|------|---------|
+| **北京** | 北京社保缴交方案 |
+| **成都** | 成都参保方案 |
+| **成都（环保公司）** | 成都参保（环保公司）方案 |
+| **西藏** | 西藏社保缴交方案 |
+
+---
+
+为了给您提供准确的缴纳比例和基数信息，**请您告诉我您的工作地区**（如：北京、成都、西藏等）。
+
+我可以为您详细解答：
+
+1. **养老保险** - 缴费基数范围、单位/个人缴纳比例
+2. **医疗保险** - 缴费基数范围、单位/个人缴纳比例
+3. **失业保险** - 缴费基数范围、单位/个人缴纳比例
+4. **工伤保险** - 缴费基数范围、单位/个人缴纳比例
+5. **生育保险** - 缴费基数范围、单位/个人缴纳比例
+6. **住房公积金** - 缴存基数范围、单位/个人缴存比例
+
+请告诉我您所在的地区，我将为您一一解答！</div>
+                                        
+                                        <button class="content-toggle" onclick="toggleContent('thought-single-1', '"\u003cthink\u003e\u7528\u6237\u8be2\u95ee\u7684\u662f\"\u793e\u5305\u5de5\u79ef\u91d1\u517b\u8001\u533b\u7597\u90a3\u4e9b\"\uff0c\u8fd9\u4e2a\u8868\u8ff0\u4e0d\u592a\u6e05\u695a\uff0c\u4f46\u5927\u81f4\u53ef\u4ee5\u7406\u89e3\u4e3a\u60f3\u4e86\u89e3\u793e\u4fdd\uff08\u793e\u4f1a\u4fdd\u9669\uff09\u3001\u516c\u79ef\u91d1\u3001\u517b\u8001\u3001\u533b\u7597\u7b49\u76f8\u5173\u653f\u7b56\u5236\u5ea6\u3002\n\n\u6839\u636e\u8bc6\u522b\u6b65\u9aa4\uff1a\n1. \u7528\u6237\u95ee\u7684\u662f\u793e\u4fdd\u3001\u516c\u79ef\u91d1\u3001\u517b\u8001\u3001\u533b\u7597\u65b9\u9762\u7684\u5185\u5bb9\n2. \u8fd9\u5c5e\u4e8e\u4eba\u529b\u653f\u7b56\u5236\u5ea6\u65b9\u9762\u7684\u95ee\u9898\uff08\u793e\u4fdd\u5236\u5ea6\u3001\u798f\u5229\u5236\u5ea6\uff09\n3. \u544a\u77e5\u7528\u6237\u8bc6\u522b\u5230\u8fd9\u662f\u793e\u4fdd\u5236\u5ea6\u76f8\u5173\u95ee\u9898\n4. \u53ef\u7528\u7684MCP\u5de5\u5177\u4e2d\uff0c\u6709 query_social_insurance \u53ef\u4ee5\u67e5\u8be2\u793e\u4fdd\u653f\u7b56\n5. \u7528\u6237\u63d0\u5230\"\u793e\u5305\u5de5\u79ef\u91d1\"\uff08\u53ef\u80fd\u662f\u793e\u4fdd\u516c\u79ef\u91d1\uff09\u3001\u517b\u8001\u3001\u533b\u7597\n\n\u6211\u9700\u8981\u5148\u786e\u8ba4\u7528\u6237\u5177\u4f53\u60f3\u4e86\u89e3\u4ec0\u4e48\u3002\u4f46\u4ece\u95ee\u9898\u6765\u770b\uff0c\u7528\u6237\u53ef\u80fd\u60f3\u4e86\u89e3\uff1a\n- \u793e\u4fdd\u653f\u7b56\uff08\u517b\u8001\u3001\u533b\u7597\u7b49\uff09\n- \u516c\u79ef\u91d1\u653f\u7b56\n\n\u8ba9\u6211\u5148\u67e5\u8be2\u793e\u4fdd\u76f8\u5173\u7684\u653f\u7b56\u3002\u77e5\u8bc6\u5e93\u4f18\u5148\u7b56\u7565\u8981\u6c42\u6211\u5148\u5c1d\u8bd5\u68c0\u7d22\u77e5\u8bc6\u5e93\uff0c\u4f46\u8fd9\u4e2a\u5de5\u5177\u662f query_social_insurance\uff0c\u5b83\u672c\u8eab\u5c31\u662f\u67e5\u8be2\u793e\u4fdd\u653f\u7b56\u7684\u3002\n\n\u6211\u5e94\u8be5\u4f7f\u7528 query_social_insurance \u5de5\u5177\u6765\u56de\u7b54\u7528\u6237\u7684\u95ee\u9898\u3002\u4f46\u7528\u6237\u7684\u95ee\u9898\u8868\u8ff0\u4e0d\u592a\u6e05\u695a\uff0c\u6211\u9700\u8981\u5148\u5c1d\u8bd5\u67e5\u8be2\uff0c\u770b\u770b\u80fd\u8fd4\u56de\u4ec0\u4e48\u5185\u5bb9\u3002\n\n\u53c2\u6570\uff1a\n- query: \u53ef\u4ee5\u662f\"\u793e\u4fdd\u653f\u7b56\u3001\u516c\u79ef\u91d1\u3001\u517b\u8001\u4fdd\u9669\u3001\u533b\u7597\u4fdd\u9669\"\u7b49\n\n\n- authorization \u548c loginname \u4f7f\u7528\u56fa\u5b9a\u7684\u9ed8\u8ba4\u503c\n\u003c/think\u003e\n\n\u60a8\u597d\uff01\u6211\u8bc6\u522b\u5230\u60a8\u60f3\u4e86\u89e3\u7684\u662f**\u793e\u4fdd\u516c\u79ef\u91d1\u76f8\u5173\u653f\u7b56\u5236\u5ea6**\uff08\u5305\u62ec\u517b\u8001\u3001\u533b\u7597\u7b49\u4fdd\u9669\u7f34\u7eb3\u6bd4\u4f8b\u3001\u57fa\u6570\u7b49\uff09\u3002\n\n\u8ba9\u6211\u4e3a\u60a8\u67e5\u8be2\u76f8\u5173\u653f\u7b56\uff1a\n\u003cthink\u003e\u7528\u6237\u8be2\u95ee\u7684\u662f\"\u793e\u5305\u5de5\u79ef\u91d1\u517b\u8001\u533b\u7597\u90a3\u4e9b\"\uff0c\u8fd9\u4e2a\u8868\u8ff0\u4e0d\u592a\u6e05\u695a\uff0c\u4f46\u5927\u81f4\u53ef\u4ee5\u7406\u89e3\u4e3a\u60f3\u4e86\u89e3\u793e\u4fdd\uff08\u793e\u4f1a\u4fdd\u9669\uff09\u3001\u516c\u79ef\u91d1\u3001\u517b\u8001\u3001\u533b\u7597\u7b49\u76f8\u5173\u653f\u7b56\u5236\u5ea6\u3002\n\n\u6839\u636e\u8bc6\u522b\u6b65\u9aa4\uff1a\n1. \u7528\u6237\u95ee\u7684\u662f\u793e\u4fdd\u3001\u516c\u79ef\u91d1\u3001\u517b\u8001\u3001\u533b\u7597\u65b9\u9762\u7684\u5185\u5bb9\n2. \u8fd9\u5c5e\u4e8e\u4eba\u529b\u653f\u7b56\u5236\u5ea6\u65b9\u9762\u7684\u95ee\u9898\uff08\u793e\u4fdd\u5236\u5ea6\u3001\u798f\u5229\u5236\u5ea6\uff09\n3. \u544a\u77e5\u7528\u6237\u8bc6\u522b\u5230\u8fd9\u662f\u793e\u4fdd\u5236\u5ea6\u76f8\u5173\u95ee\u9898\n4. \u53ef\u7528\u7684MCP\u5de5\u5177\u4e2d\uff0c\u6709 query_social_insurance \u53ef\u4ee5\u67e5\u8be2\u793e\u4fdd\u653f\u7b56\n5. \u7528\u6237\u63d0\u5230\"\u793e\u5305\u5de5\u79ef\u91d1\"\uff08\u53ef\u80fd\u662f\u793e\u4fdd\u516c\u79ef\u91d1\uff09\u3001\u517b\u8001\u3001\u533b\u7597\n\n\u6211\u9700\u8981\u5148\u786e\u8ba4\u7528\u6237\u5177\u4f53\u60f3\u4e86\u89e3\u4ec0\u4e48\u3002\u4f46\u4ece\u95ee\u9898\u6765\u770b\uff0c\u7528\u6237\u53ef\u80fd\u60f3\u4e86\u89e3\uff1a\n- \u793e\u4fdd\u653f\u7b56\uff08\u517b\u8001\u3001\u533b\u7597\u7b49\uff09\n- \u516c\u79ef\u91d1\u653f\u7b56\n\n\u8ba9\u6211\u5148\u67e5\u8be2\u793e\u4fdd\u76f8\u5173\u7684\u653f\u7b56\u3002\u77e5\u8bc6\u5e93\u4f18\u5148\u7b56\u7565\u8981\u6c42\u6211\u5148\u5c1d\u8bd5\u68c0\u7d22\u77e5\u8bc6\u5e93\uff0c\u4f46\u8fd9\u4e2a\u5de5\u5177\u662f query_social_insurance\uff0c\u5b83\u672c\u8eab\u5c31\u662f\u67e5\u8be2\u793e\u4fdd\u653f\u7b56\u7684\u3002\n\n\u6211\u5e94\u8be5\u4f7f\u7528 query_social_insurance \u5de5\u5177\u6765\u56de\u7b54\u7528\u6237\u7684\u95ee\u9898\u3002\u4f46\u7528\u6237\u7684\u95ee\u9898\u8868\u8ff0\u4e0d\u592a\u6e05\u695a\uff0c\u6211\u9700\u8981\u5148\u5c1d\u8bd5\u67e5\u8be2\uff0c\u770b\u770b\u80fd\u8fd4\u56de\u4ec0\u4e48\u5185\u5bb9\u3002\n\n\u53c2\u6570\uff1a\n- query: \u53ef\u4ee5\u662f\"\u793e\u4fdd\u653f\u7b56\u3001\u516c\u79ef\u91d1\u3001\u517b\u8001\u4fdd\u9669\u3001\u533b\u7597\u4fdd\u9669\"\u7b49\n\n\n- authorization \u548c loginname \u4f7f\u7528\u56fa\u5b9a\u7684\u9ed8\u8ba4\u503c\n\u003c/think\u003e\n\n\u60a8\u597d\uff01\u6211\u8bc6\u522b\u5230\u60a8\u60f3\u4e86\u89e3\u7684\u662f**\u793e\u4fdd\u516c\u79ef\u91d1\u76f8\u5173\u653f\u7b56\u5236\u5ea6**\uff08\u5305\u62ec\u517b\u8001\u3001\u533b\u7597\u7b49\u4fdd\u9669\u7f34\u7eb3\u6bd4\u4f8b\u3001\u57fa\u6570\u7b49\uff09\u3002\n\n\u8ba9\u6211\u4e3a\u60a8\u67e5\u8be2\u76f8\u5173\u653f\u7b56\uff1a\n\u6839\u636e\u7528\u6237\u7684\u95ee\u9898\uff0c\u6211\u9700\u8981\u5148\u8bc6\u522b\u51fa\u7528\u6237\u95ee\u7684\u662f\u5173\u4e8e\u793e\u4fdd\uff08\u517b\u8001\u3001\u533b\u7597\u7b49\uff09\u548c\u516c\u79ef\u91d1\u7684\u7f34\u7eb3\u6bd4\u4f8b\u3001\u57fa\u6570\u653f\u7b56\u3002\u8fd9\u662f\u4e00\u4e2a\u653f\u7b56\u5236\u5ea6\u7c7b\u7684\u95ee\u9898\uff0c\u5c5e\u4e8e\"\u793e\u4fdd\u5236\u5ea6\"\u65b9\u9762\u3002\n\n\u7528\u6237\u6ca1\u6709\u660e\u786e\u8bf4\u51fa\u5177\u4f53\u5730\u533a\uff0c\u6211\u9700\u8981\u8be2\u95ee\u7528\u6237\u7684\u5de5\u4f5c\u5730\u533a\u624d\u80fd\u7ed9\u51fa\u51c6\u786e\u7684\u7b54\u6848\u3002\u4ece\u77e5\u8bc6\u5e93\u68c0\u7d22\u7ed3\u679c\u6765\u770b\uff0c\u76ee\u524d\u516c\u53f8\u6d89\u53ca\u7684\u5730\u533a\u6709\uff1a\u5317\u4eac\u3001\u6210\u90fd\u3001\u6210\u90fd\uff08\u73af\u4fdd\u516c\u53f8\uff09\u3001\u897f\u85cf\u56db\u4e2a\u5730\u533a\u3002\n\n\u6211\u5e94\u8be5\u76f4\u63a5\u8f93\u51fa\u77e5\u8bc6\u5e93\u8fd4\u56de\u7684\u7ed3\u679c\uff0c\u4f46\u662f\u8981\u6574\u7406\u5f97\u6e05\u6670\u6613\u8bfb\u3002\u6839\u636e\u77e5\u8bc6\u5e93\u5185\u5bb9\uff0c\u6211\u53ef\u4ee5\u7ed9\u7528\u6237\u4e00\u4e2a\u6e05\u6670\u7684\u56de\u590d\uff0c\u544a\u8bc9\u4ed6\u4eec\u9700\u8981\u63d0\u4f9b\u5730\u533a\u4fe1\u606f\u3002\n\n\u8ba9\u6211\u76f4\u63a5\u8fd4\u56de\u77e5\u8bc6\u5e93\u7684\u68c0\u7d22\u7ed3\u679c\u5185\u5bb9\uff0c\u4f46\u9700\u8981\u8fdb\u884c\u9002\u5f53\u7684\u6574\u7406\u548c\u6392\u7248\uff0c\u8ba9\u7528\u6237\u66f4\u5bb9\u6613\u7406\u89e3\u3002\n\u003c/think\u003e\n\n\u60a8\u597d\uff01\u611f\u8c22\u60a8\u7684\u54a8\u8be2\u3002\n\n\u5173\u4e8e\u793e\u4fdd\uff08\u517b\u8001\u3001\u533b\u7597\u7b49\uff09\u548c\u516c\u79ef\u91d1\u7684\u7f34\u7eb3\u6bd4\u4f8b\u3001\u57fa\u6570\u7b49\u653f\u7b56\uff0c\u5177\u4f53\u6570\u636e\u56e0**\u6240\u5728\u5730\u533a**\u4e0d\u540c\u800c\u6709\u6240\u5dee\u5f02\u3002\n\n\u76ee\u524d\u6211\u4eec\u516c\u53f8\u6d89\u53ca\u7684\u5730\u533a\u5305\u62ec\uff1a\n\n| \u5730\u533a | \u793e\u4fdd\u65b9\u6848 |\n|------|---------|\n| **\u5317\u4eac** | \u5317\u4eac\u793e\u4fdd\u7f34\u4ea4\u65b9\u6848 |\n| **\u6210\u90fd** | \u6210\u90fd\u53c2\u4fdd\u65b9\u6848 |\n| **\u6210\u90fd\uff08\u73af\u4fdd\u516c\u53f8\uff09** | \u6210\u90fd\u53c2\u4fdd\uff08\u73af\u4fdd\u516c\u53f8\uff09\u65b9\u6848 |\n| **\u897f\u85cf** | \u897f\u85cf\u793e\u4fdd\u7f34\u4ea4\u65b9\u6848 |\n\n---\n\n\u4e3a\u4e86\u7ed9\u60a8\u63d0\u4f9b\u51c6\u786e\u7684\u7f34\u7eb3\u6bd4\u4f8b\u548c\u57fa\u6570\u4fe1\u606f\uff0c**\u8bf7\u60a8\u544a\u8bc9\u6211\u60a8\u7684\u5de5\u4f5c\u5730\u533a**\uff08\u5982\uff1a\u5317\u4eac\u3001\u6210\u90fd\u3001\u897f\u85cf\u7b49\uff09\u3002\n\n\u6211\u53ef\u4ee5\u4e3a\u60a8\u8be6\u7ec6\u89e3\u7b54\uff1a\n\n1. **\u517b\u8001\u4fdd\u9669** - \u7f34\u8d39\u57fa\u6570\u8303\u56f4\u3001\u5355\u4f4d/\u4e2a\u4eba\u7f34\u7eb3\u6bd4\u4f8b\n2. **\u533b\u7597\u4fdd\u9669** - \u7f34\u8d39\u57fa\u6570\u8303\u56f4\u3001\u5355\u4f4d/\u4e2a\u4eba\u7f34\u7eb3\u6bd4\u4f8b\n3. **\u5931\u4e1a\u4fdd\u9669** - \u7f34\u8d39\u57fa\u6570\u8303\u56f4\u3001\u5355\u4f4d/\u4e2a\u4eba\u7f34\u7eb3\u6bd4\u4f8b\n4. **\u5de5\u4f24\u4fdd\u9669** - \u7f34\u8d39\u57fa\u6570\u8303\u56f4\u3001\u5355\u4f4d/\u4e2a\u4eba\u7f34\u7eb3\u6bd4\u4f8b\n5. **\u751f\u80b2\u4fdd\u9669** - \u7f34\u8d39\u57fa\u6570\u8303\u56f4\u3001\u5355\u4f4d/\u4e2a\u4eba\u7f34\u7eb3\u6bd4\u4f8b\n6. **\u4f4f\u623f\u516c\u79ef\u91d1** - \u7f34\u5b58\u57fa\u6570\u8303\u56f4\u3001\u5355\u4f4d/\u4e2a\u4eba\u7f34\u5b58\u6bd4\u4f8b\n\n\u8bf7\u544a\u8bc9\u6211\u60a8\u6240\u5728\u7684\u5730\u533a\uff0c\u6211\u5c06\u4e3a\u60a8\u4e00\u4e00\u89e3\u7b54\uff01"')">
+                                            ✨ 展开全部
+                                        </button>
+                                        
+                                    </div>
+                                    
+
+                                    <div class="answer-box">
+                                        <div class="answer-label">💡 AI回答 (1348 字符)</div>
+                                        <div id="answer-single-1" class="content-preview"><think>用户询问的是"社包工积金养老医疗那些"，这个表述不太清楚，但大致可以理解为想了解社保（社会保险）、公积金、养老、医疗等相关政策制度。
+
+根据识别步骤：
+1. 用户问的是社保、公积金、养老、医疗方面的内容
+2. 这属于人力政策制度方面的问题（社保制度、福利制度）
+3. 告知用户识别到这是社保制度相关问题
+4. 可用的MCP工具中，有 query_social_insurance 可以查询社保政策
+5. 用户提到"社包工积金"（可能是社保公积金）、养老、医疗
+
+我需要先确认用户具体想了解什么。但从问题来看，用户可能想了解：
+- 社保政策（养老、医疗等）
+- 公积金政策
+
+让我先查询社保相关的政策。知识库优先策略要求我先尝试检索知识库，但这个工具是 query_social_insurance，它本身就是查询社保政策的。
+
+我应该使用 query_social_insurance 工具来回答用户的问题。但用户的问题表述不太清楚，我需要先尝试查询，看看能返回什么内容。
+
+参数：
+- query: 可以是"社保政策、公积金、养老保险、医疗保险"等
+
+
+- authorization 和 loginname 使用固定的默认值
+</think>
+
+您好！我识别到您想了解的是**社保公积金相关政策制度**（包括养老、医疗等保险缴纳比例、基数等）。
+
+让我为您查询相关政策：
+根据用户的问题，我需要先识别出用户问的是关于社保（养老、医疗等）和公积金的缴纳比例、基数政策。这是一个政策制度类的问题，属于"社保制度"方面。
+
+用户没有明确说出具体地区，我需要询问用户的工作地区才能给出准确的答案。从知识库检索结果来看，目前公司涉及的地区有：北京、成都、成都（环保公司）、西藏四个地区。
+
+我应该直接输出知识库返回的结果，但是要整理得清晰易读。根据知识库内容，我可以给用户一个清晰的回复，告诉他们需要提供地区信息。
+
+让我直接返回知识库的检索结果内容，但需要进行适当的整理和排版，让用户更容易理解。
+</think>
+
+您好！感谢您的咨询。
+
+关于社保（养老、医疗等）和公积金的缴纳比例、基数等政策，具体数据因**所在地区**不同而有所差异。
+
+目前我们公司涉及的地区包括：
+
+| 地区 | 社保方案 |
+|------|---------|
+| **北京** | 北京社保缴交方案 |
+| **成都** | 成都参保方案 |
+| **成都（环保公司）** | 成都参保（环保公司）方案 |
+| **西藏** | 西藏社保缴交方案 |
+
+---
+
+为了给您提供准确的缴纳比例和基数信息，**请您告诉我您的工作地区**（如：北京、成都、西藏等）。
+
+我可以为您详细解答：
+
+1. **养老保险** - 缴费基数范围、单位/个人缴纳比例
+2. **医疗保险** - 缴费基数范围、单位/个人缴纳比例
+3. **失业保险** - 缴费基数范围、单位/个人缴纳比例
+4. **工伤保险** - 缴费基数范围、单位/个人缴纳比例
+5. **生育保险** - 缴费基数范围、单位/个人缴纳比例
+6. **住房公积金** - 缴存基数范围、单位/个人缴存比例
+
+请告诉我您所在的地区，我将为您一一解答！</div>
+                                        
+                                        <button class="content-toggle" onclick="toggleContent('answer-single-1', '"\u003cthink\u003e\u7528\u6237\u8be2\u95ee\u7684\u662f\"\u793e\u5305\u5de5\u79ef\u91d1\u517b\u8001\u533b\u7597\u90a3\u4e9b\"\uff0c\u8fd9\u4e2a\u8868\u8ff0\u4e0d\u592a\u6e05\u695a\uff0c\u4f46\u5927\u81f4\u53ef\u4ee5\u7406\u89e3\u4e3a\u60f3\u4e86\u89e3\u793e\u4fdd\uff08\u793e\u4f1a\u4fdd\u9669\uff09\u3001\u516c\u79ef\u91d1\u3001\u517b\u8001\u3001\u533b\u7597\u7b49\u76f8\u5173\u653f\u7b56\u5236\u5ea6\u3002\n\n\u6839\u636e\u8bc6\u522b\u6b65\u9aa4\uff1a\n1. \u7528\u6237\u95ee\u7684\u662f\u793e\u4fdd\u3001\u516c\u79ef\u91d1\u3001\u517b\u8001\u3001\u533b\u7597\u65b9\u9762\u7684\u5185\u5bb9\n2. \u8fd9\u5c5e\u4e8e\u4eba\u529b\u653f\u7b56\u5236\u5ea6\u65b9\u9762\u7684\u95ee\u9898\uff08\u793e\u4fdd\u5236\u5ea6\u3001\u798f\u5229\u5236\u5ea6\uff09\n3. \u544a\u77e5\u7528\u6237\u8bc6\u522b\u5230\u8fd9\u662f\u793e\u4fdd\u5236\u5ea6\u76f8\u5173\u95ee\u9898\n4. \u53ef\u7528\u7684MCP\u5de5\u5177\u4e2d\uff0c\u6709 query_social_insurance \u53ef\u4ee5\u67e5\u8be2\u793e\u4fdd\u653f\u7b56\n5. \u7528\u6237\u63d0\u5230\"\u793e\u5305\u5de5\u79ef\u91d1\"\uff08\u53ef\u80fd\u662f\u793e\u4fdd\u516c\u79ef\u91d1\uff09\u3001\u517b\u8001\u3001\u533b\u7597\n\n\u6211\u9700\u8981\u5148\u786e\u8ba4\u7528\u6237\u5177\u4f53\u60f3\u4e86\u89e3\u4ec0\u4e48\u3002\u4f46\u4ece\u95ee\u9898\u6765\u770b\uff0c\u7528\u6237\u53ef\u80fd\u60f3\u4e86\u89e3\uff1a\n- \u793e\u4fdd\u653f\u7b56\uff08\u517b\u8001\u3001\u533b\u7597\u7b49\uff09\n- \u516c\u79ef\u91d1\u653f\u7b56\n\n\u8ba9\u6211\u5148\u67e5\u8be2\u793e\u4fdd\u76f8\u5173\u7684\u653f\u7b56\u3002\u77e5\u8bc6\u5e93\u4f18\u5148\u7b56\u7565\u8981\u6c42\u6211\u5148\u5c1d\u8bd5\u68c0\u7d22\u77e5\u8bc6\u5e93\uff0c\u4f46\u8fd9\u4e2a\u5de5\u5177\u662f query_social_insurance\uff0c\u5b83\u672c\u8eab\u5c31\u662f\u67e5\u8be2\u793e\u4fdd\u653f\u7b56\u7684\u3002\n\n\u6211\u5e94\u8be5\u4f7f\u7528 query_social_insurance \u5de5\u5177\u6765\u56de\u7b54\u7528\u6237\u7684\u95ee\u9898\u3002\u4f46\u7528\u6237\u7684\u95ee\u9898\u8868\u8ff0\u4e0d\u592a\u6e05\u695a\uff0c\u6211\u9700\u8981\u5148\u5c1d\u8bd5\u67e5\u8be2\uff0c\u770b\u770b\u80fd\u8fd4\u56de\u4ec0\u4e48\u5185\u5bb9\u3002\n\n\u53c2\u6570\uff1a\n- query: \u53ef\u4ee5\u662f\"\u793e\u4fdd\u653f\u7b56\u3001\u516c\u79ef\u91d1\u3001\u517b\u8001\u4fdd\u9669\u3001\u533b\u7597\u4fdd\u9669\"\u7b49\n\n\n- authorization \u548c loginname \u4f7f\u7528\u56fa\u5b9a\u7684\u9ed8\u8ba4\u503c\n\u003c/think\u003e\n\n\u60a8\u597d\uff01\u6211\u8bc6\u522b\u5230\u60a8\u60f3\u4e86\u89e3\u7684\u662f**\u793e\u4fdd\u516c\u79ef\u91d1\u76f8\u5173\u653f\u7b56\u5236\u5ea6**\uff08\u5305\u62ec\u517b\u8001\u3001\u533b\u7597\u7b49\u4fdd\u9669\u7f34\u7eb3\u6bd4\u4f8b\u3001\u57fa\u6570\u7b49\uff09\u3002\n\n\u8ba9\u6211\u4e3a\u60a8\u67e5\u8be2\u76f8\u5173\u653f\u7b56\uff1a\n\u6839\u636e\u7528\u6237\u7684\u95ee\u9898\uff0c\u6211\u9700\u8981\u5148\u8bc6\u522b\u51fa\u7528\u6237\u95ee\u7684\u662f\u5173\u4e8e\u793e\u4fdd\uff08\u517b\u8001\u3001\u533b\u7597\u7b49\uff09\u548c\u516c\u79ef\u91d1\u7684\u7f34\u7eb3\u6bd4\u4f8b\u3001\u57fa\u6570\u653f\u7b56\u3002\u8fd9\u662f\u4e00\u4e2a\u653f\u7b56\u5236\u5ea6\u7c7b\u7684\u95ee\u9898\uff0c\u5c5e\u4e8e\"\u793e\u4fdd\u5236\u5ea6\"\u65b9\u9762\u3002\n\n\u7528\u6237\u6ca1\u6709\u660e\u786e\u8bf4\u51fa\u5177\u4f53\u5730\u533a\uff0c\u6211\u9700\u8981\u8be2\u95ee\u7528\u6237\u7684\u5de5\u4f5c\u5730\u533a\u624d\u80fd\u7ed9\u51fa\u51c6\u786e\u7684\u7b54\u6848\u3002\u4ece\u77e5\u8bc6\u5e93\u68c0\u7d22\u7ed3\u679c\u6765\u770b\uff0c\u76ee\u524d\u516c\u53f8\u6d89\u53ca\u7684\u5730\u533a\u6709\uff1a\u5317\u4eac\u3001\u6210\u90fd\u3001\u6210\u90fd\uff08\u73af\u4fdd\u516c\u53f8\uff09\u3001\u897f\u85cf\u56db\u4e2a\u5730\u533a\u3002\n\n\u6211\u5e94\u8be5\u76f4\u63a5\u8f93\u51fa\u77e5\u8bc6\u5e93\u8fd4\u56de\u7684\u7ed3\u679c\uff0c\u4f46\u662f\u8981\u6574\u7406\u5f97\u6e05\u6670\u6613\u8bfb\u3002\u6839\u636e\u77e5\u8bc6\u5e93\u5185\u5bb9\uff0c\u6211\u53ef\u4ee5\u7ed9\u7528\u6237\u4e00\u4e2a\u6e05\u6670\u7684\u56de\u590d\uff0c\u544a\u8bc9\u4ed6\u4eec\u9700\u8981\u63d0\u4f9b\u5730\u533a\u4fe1\u606f\u3002\n\n\u8ba9\u6211\u76f4\u63a5\u8fd4\u56de\u77e5\u8bc6\u5e93\u7684\u68c0\u7d22\u7ed3\u679c\u5185\u5bb9\uff0c\u4f46\u9700\u8981\u8fdb\u884c\u9002\u5f53\u7684\u6574\u7406\u548c\u6392\u7248\uff0c\u8ba9\u7528\u6237\u66f4\u5bb9\u6613\u7406\u89e3\u3002\n\u003c/think\u003e\n\n\u60a8\u597d\uff01\u611f\u8c22\u60a8\u7684\u54a8\u8be2\u3002\n\n\u5173\u4e8e\u793e\u4fdd\uff08\u517b\u8001\u3001\u533b\u7597\u7b49\uff09\u548c\u516c\u79ef\u91d1\u7684\u7f34\u7eb3\u6bd4\u4f8b\u3001\u57fa\u6570\u7b49\u653f\u7b56\uff0c\u5177\u4f53\u6570\u636e\u56e0**\u6240\u5728\u5730\u533a**\u4e0d\u540c\u800c\u6709\u6240\u5dee\u5f02\u3002\n\n\u76ee\u524d\u6211\u4eec\u516c\u53f8\u6d89\u53ca\u7684\u5730\u533a\u5305\u62ec\uff1a\n\n| \u5730\u533a | \u793e\u4fdd\u65b9\u6848 |\n|------|---------|\n| **\u5317\u4eac** | \u5317\u4eac\u793e\u4fdd\u7f34\u4ea4\u65b9\u6848 |\n| **\u6210\u90fd** | \u6210\u90fd\u53c2\u4fdd\u65b9\u6848 |\n| **\u6210\u90fd\uff08\u73af\u4fdd\u516c\u53f8\uff09** | \u6210\u90fd\u53c2\u4fdd\uff08\u73af\u4fdd\u516c\u53f8\uff09\u65b9\u6848 |\n| **\u897f\u85cf** | \u897f\u85cf\u793e\u4fdd\u7f34\u4ea4\u65b9\u6848 |\n\n---\n\n\u4e3a\u4e86\u7ed9\u60a8\u63d0\u4f9b\u51c6\u786e\u7684\u7f34\u7eb3\u6bd4\u4f8b\u548c\u57fa\u6570\u4fe1\u606f\uff0c**\u8bf7\u60a8\u544a\u8bc9\u6211\u60a8\u7684\u5de5\u4f5c\u5730\u533a**\uff08\u5982\uff1a\u5317\u4eac\u3001\u6210\u90fd\u3001\u897f\u85cf\u7b49\uff09\u3002\n\n\u6211\u53ef\u4ee5\u4e3a\u60a8\u8be6\u7ec6\u89e3\u7b54\uff1a\n\n1. **\u517b\u8001\u4fdd\u9669** - \u7f34\u8d39\u57fa\u6570\u8303\u56f4\u3001\u5355\u4f4d/\u4e2a\u4eba\u7f34\u7eb3\u6bd4\u4f8b\n2. **\u533b\u7597\u4fdd\u9669** - \u7f34\u8d39\u57fa\u6570\u8303\u56f4\u3001\u5355\u4f4d/\u4e2a\u4eba\u7f34\u7eb3\u6bd4\u4f8b\n3. **\u5931\u4e1a\u4fdd\u9669** - \u7f34\u8d39\u57fa\u6570\u8303\u56f4\u3001\u5355\u4f4d/\u4e2a\u4eba\u7f34\u7eb3\u6bd4\u4f8b\n4. **\u5de5\u4f24\u4fdd\u9669** - \u7f34\u8d39\u57fa\u6570\u8303\u56f4\u3001\u5355\u4f4d/\u4e2a\u4eba\u7f34\u7eb3\u6bd4\u4f8b\n5. **\u751f\u80b2\u4fdd\u9669** - \u7f34\u8d39\u57fa\u6570\u8303\u56f4\u3001\u5355\u4f4d/\u4e2a\u4eba\u7f34\u7eb3\u6bd4\u4f8b\n6. **\u4f4f\u623f\u516c\u79ef\u91d1** - \u7f34\u5b58\u57fa\u6570\u8303\u56f4\u3001\u5355\u4f4d/\u4e2a\u4eba\u7f34\u5b58\u6bd4\u4f8b\n\n\u8bf7\u544a\u8bc9\u6211\u60a8\u6240\u5728\u7684\u5730\u533a\uff0c\u6211\u5c06\u4e3a\u60a8\u4e00\u4e00\u89e3\u7b54\uff01"')">
+                                            ✨ 展开全部
+                                        </button>
+                                        
+                                    </div>
+
+                                    <div class="metrics-grid">
+                                        <div class="metric-item">
+                                            <div class="metric-value">75695ms</div>
+                                            <div class="metric-label">总响应时间</div>
+                                        </div>
+                                        <div class="metric-item">
+                                            <div class="metric-value">1912ms</div>
+                                            <div class="metric-label">首字时间</div>
+                                        </div>
+                                        <div class="metric-item">
+                                            <div class="metric-value">1348</div>
+                                            <div class="metric-label">回答长度</div>
+                                        </div>
+                                        
+                                        <div class="metric-item">
+                                            <div class="metric-value">1943</div>
+                                            <div class="metric-label">思考长度</div>
+                                        </div>
+                                        
+                                    </div>
+
+                                    
+                                    <div class="assertion-list">
+                                        <strong>🔍 断言结果:</strong>
+                                        
+                                        <div class="assertion-item assertion-passed">
+                                            <strong>回答非空:</strong>
+                                            ✅
+                                            回答长度: 1348
+                                            
+                                            <br><small>期望: 回答长度 >= 1</small>
+                                            
+                                        </div>
+                                        
+                                        <div class="assertion-item assertion-failed">
+                                            <strong>响应时间:</strong>
+                                            ❌
+                                            75694.95ms
+                                            
+                                            <br><small>期望: < 30000ms</small>
+                                            
+                                        </div>
+                                        
+                                        <div class="assertion-item assertion-passed">
+                                            <strong>无错误信息:</strong>
+                                            ✅
+                                            未包含错误关键词
+                                            
+                                            <br><small>期望: 不包含错误关键词</small>
+                                            
+                                        </div>
+                                        
+                                        <div class="assertion-item assertion-passed">
+                                            <strong>思考过程存在:</strong>
+                                            ✅
+                                            思考长度: 1943
+                                            
+                                            <br><small>期望: 思考长度 >= 10</small>
+                                            
+                                        </div>
+                                        
+                                        <div class="assertion-item assertion-passed">
+                                            <strong>无禁止关键词:</strong>
+                                            ✅
+                                            未包含禁止关键词
+                                            
+                                            <br><small>期望: 不包含: 不知道, 无法回答, 暂未上线</small>
+                                            
+                                        </div>
+                                        
+                                        <div class="assertion-item assertion-passed">
+                                            <strong>必需关键词(social_insurance):</strong>
+                                            ✅
+                                            包含必需关键词
+                                            
+                                            <br><small>期望: 包含: 社保, 缴费</small>
+                                            
+                                        </div>
+                                        
+                                    </div>
+                                    
+
+                                    
+                                </div>
+                                
+                            </div>
+                            
+
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer">
+        生成时间: 2026-05-09 19:12:38
+    </div>
+</div>
+
+<script>    document.addEventListener('DOMContentLoaded', function () {
+        const toggleButtons = document.querySelectorAll('.toggle-button');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const index = this.getAttribute('data-btn-index');
+                toggleSteps(index);
+            });
+        });
+
+        const caseHeaders = document.querySelectorAll('.case-header');
+        caseHeaders.forEach(header => {
+            header.addEventListener('click', function (e) {
+                if (!e.target.classList.contains('toggle-button') && e.target.tagName !== 'BUTTON') {
+                    const index = this.getAttribute('data-case-index');
+                    toggleSteps(index);
+                }
+            });
+        });
+
+        // 默认展开失败的用例
+        
+        
+        
+    });
+
+    function toggleSteps(caseIndex) {
+        try {
+            const stepsRow = document.getElementById('steps-' + caseIndex);
+            const toggleButton = document.querySelector('[data-btn-index="' + caseIndex + '"]');
+
+            if (!stepsRow || !toggleButton) {
+                console.error('无法找到元素:', caseIndex);
+                return;
+            }
+
+            if (stepsRow.style.display === 'table-row') {
+                stepsRow.style.display = 'none';
+                toggleButton.textContent = '展开步骤';
+            } else {
+                stepsRow.style.display = 'table-row';
+                toggleButton.textContent = '收起步骤';
+            }
+        } catch (error) {
+            console.error('切换步骤时出错:', error);
+        }
+    }
+
+    // 展开/收起详细内容
+    function toggleContent(elementId, fullContent) {
+        const element = document.getElementById(elementId);
+        const button = event.currentTarget;
+
+        if (!element || !button) {
+            console.error('找不到元素或按钮');
+            return;
+        }
+
+        // 解析JSON字符串（如果是JSON格式）
+        let content = fullContent;
+        try {
+            // 尝试解析为JSON
+            const parsed = JSON.parse(fullContent);
+            // 如果解析成功且是字符串，使用解析后的值
+            if (typeof parsed === 'string') {
+                content = parsed;
+            }
+        } catch(e) {
+            // 如果不是JSON格式，直接使用原始内容
+            content = fullContent;
+        }
+
+        if (element.classList.contains('content-preview')) {
+            // 展开：显示完整内容
+            element.textContent = content;
+            element.classList.remove('content-preview');
+            element.classList.add('content-full');
+            button.textContent = '📄 收起';
+            button.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+        } else {
+            // 收起：显示预览内容
+            const isThought = elementId.includes('thought');
+            const previewLength = isThought ? 500 : 1000;
+
+            if (content.length > previewLength) {
+                element.textContent = content.substring(0, previewLength);
+                element.classList.remove('content-full');
+                element.classList.add('content-preview');
+                button.textContent = '✨ 展开全部';
+                button.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            } else {
+                // 如果内容本身就不长，隐藏按钮
+                button.style.display = 'none';
+            }
+        }
+    }
+</script>
+</body>
+</html>
